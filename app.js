@@ -78,7 +78,26 @@ async function cargarDespensas() {
         despensasUsuario = await apiRequest('despensas');
         
         if (despensasUsuario.length === 0) {
-            mostrarPantallaCrearDespensa();
+            // No tiene ninguna despensa: preguntar si crear o unirse
+            const opcion = prompt('👋 Bienvenido a la despensa compartida.\n\nNo tienes ninguna despensa todavía.\n\nEscribe "crear" para crear una nueva.\nO escribe "unirse" para unirte a una existente con código de invitación.');
+            
+            if (opcion === 'crear') {
+                const nombre = prompt('📝 Nombre de la nueva despensa:');
+                if (nombre && nombre.trim()) {
+                    await crearDespensa(nombre.trim());
+                } else {
+                    cargarDespensas(); // Reintentar
+                }
+            } else if (opcion === 'unirse') {
+                const codigo = prompt('🔗 Introduce el código de invitación:');
+                if (codigo && codigo.trim()) {
+                    await unirseADespensa(codigo.trim().toUpperCase());
+                } else {
+                    cargarDespensas(); // Reintentar
+                }
+            } else {
+                cargarDespensas(); // Reintentar
+            }
         } else if (despensasUsuario.length === 1) {
             despensaActual = despensasUsuario[0];
             await cargarProductos();
@@ -88,7 +107,7 @@ async function cargarDespensas() {
         }
     } catch (error) {
         console.error('Error cargando despensas:', error);
-        mostrarPantallaCrearDespensa();
+        alert('Error al cargar las despensas. Recarga la página.');
     }
 }
 
@@ -116,18 +135,31 @@ async function crearDespensa(nombre) {
 }
 
 function mostrarSelectorDespensas() {
-    const despensaList = despensasUsuario.map(d => 
-        `${d.nombre} ${d.rol === 'admin' ? '👑' : '👤'}`
-    ).join('\n');
+    // Crear un mensaje con la lista de despensas
+    let mensaje = '📋 TUS DESPENSAS:\n\n';
+    despensasUsuario.forEach((d, i) => {
+        mensaje += `${i + 1}. ${d.nombre} ${d.rol === 'admin' ? '👑' : '👤'}\n`;
+    });
+    mensaje += `\nEscribe el NÚMERO de la despensa que quieres usar.`;
+    mensaje += `\nO escribe "nueva" para crear una nueva.`;
+    mensaje += `\nO escribe "unirse" para unirte a una con código de invitación.`;
     
-    const opcion = prompt(`Tienes varias despensas:\n\n${despensaList}\n\nEscribe el número de la despensa que quieres usar:\n1. ${despensasUsuario[0].nombre}\n2. ${despensasUsuario[1].nombre}${despensasUsuario[2] ? `\n3. ${despensasUsuario[2].nombre}` : ''}\n\nO escribe "nueva" para crear una nueva, o "invitar" para unirte a una existente:`);
+    const opcion = prompt(mensaje);
     
     if (opcion === 'nueva') {
-        const nombre = prompt('Nombre de la nueva despensa:');
-        if (nombre) crearDespensa(nombre);
-        else mostrarSelectorDespensas();
-    } else if (opcion === 'invitar') {
-        mostrarModalUnirse();
+        const nombre = prompt('📝 Nombre de la nueva despensa:');
+        if (nombre && nombre.trim()) {
+            crearDespensa(nombre.trim());
+        } else {
+            mostrarSelectorDespensas();
+        }
+    } else if (opcion === 'unirse') {
+        const codigo = prompt('🔗 Introduce el código de invitación:');
+        if (codigo && codigo.trim()) {
+            unirseADespensa(codigo.trim().toUpperCase());
+        } else {
+            mostrarSelectorDespensas();
+        }
     } else {
         const indice = parseInt(opcion) - 1;
         if (indice >= 0 && indice < despensasUsuario.length) {
@@ -135,6 +167,7 @@ function mostrarSelectorDespensas() {
             cargarProductos();
             mostrarPantallaPrincipal();
         } else {
+            alert('❌ Opción no válida.');
             mostrarSelectorDespensas();
         }
     }
@@ -156,12 +189,25 @@ async function unirseADespensa(codigo) {
     try {
         const resultado = await apiRequest('unirse', 'POST', { codigo });
         if (resultado.success) {
-            alert(`✅ Te has unido a la despensa.`);
+            alert(`✅ Te has unido a la despensa correctamente.`);
+            // Recargar las despensas del usuario
             await cargarDespensas();
         }
     } catch (error) {
-        alert('❌ Código inválido o expirado. Inténtalo de nuevo.');
-        mostrarModalUnirse();
+        console.error('Error al unirse:', error);
+        alert('❌ Código inválido, expirado o ya usado.\n\nComprueba que el código es correcto y vuelve a intentarlo.');
+        // Preguntar si quiere intentar de nuevo o volver al selector
+        const reintentar = confirm('¿Quieres intentar con otro código?');
+        if (reintentar) {
+            const nuevoCodigo = prompt('🔗 Introduce el código de invitación:');
+            if (nuevoCodigo && nuevoCodigo.trim()) {
+                unirseADespensa(nuevoCodigo.trim().toUpperCase());
+            } else {
+                cargarDespensas(); // Volver al selector
+            }
+        } else {
+            cargarDespensas();
+        }
     }
 }
 
