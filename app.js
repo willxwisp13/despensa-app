@@ -382,4 +382,121 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.target === modalManual) modalManual.style.display = 'none';
     if (e.target === modalAcciones) modalAcciones.style.display = 'none';
   });
+  // ============================================
+// NUEVAS FUNCIONES PARA OPEN FOOD FACTS
+// ============================================
+
+// Mostrar/ocultar indicador de carga
+function mostrarCargando(mostrar) {
+    let loader = document.getElementById('loadingIndicator');
+    if (!loader && mostrar) {
+        loader = document.createElement('div');
+        loader.id = 'loadingIndicator';
+        loader.innerHTML = '<div class="loader">🔍 Buscando producto en la base de datos...</div>';
+        loader.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:20px; border-radius:10px; z-index:9999; box-shadow:0 2px 10px rgba(0,0,0,0.2);';
+        document.body.appendChild(loader);
+    } else if (!mostrar && loader) {
+        loader.remove();
+    }
+}
+
+// Buscar producto en Open Food Facts por código de barras
+async function buscarEnOpenFoodFacts(codigo) {
+    try {
+        mostrarCargando(true);
+        
+        const respuesta = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
+        const datos = await respuesta.json();
+        
+        if (datos.status === 1 && datos.product) {
+            const producto = datos.product;
+            
+            return {
+                encontrado: true,
+                nombre: producto.product_name_es || producto.product_name || "Producto sin nombre",
+                marca: producto.brands || "",
+                categoria: extraerCategoria(producto.categories_tags),
+                cantidad: producto.quantity || "",
+                imagen: producto.image_url || "",
+                ingredientes: producto.ingredients_text_es || producto.ingredients_text || "",
+                codigo_barras: codigo
+            };
+        } else {
+            return { encontrado: false, codigo_barras: codigo };
+        }
+    } catch (error) {
+        console.error("Error al consultar Open Food Facts:", error);
+        return { encontrado: false, codigo_barras: codigo, error: true };
+    } finally {
+        mostrarCargando(false);
+    }
+}
+
+// Función auxiliar para extraer categoría
+function extraerCategoria(tags) {
+    if (!tags || tags.length === 0) return "Otros";
+    
+    const mapaCategorias = {
+        "en:beverages": "Bebidas",
+        "en:dairy": "Lácteos",
+        "en:fruits": "Frutas",
+        "en:vegetables": "Verduras",
+        "en:meats": "Carnes",
+        "en:frozen-foods": "Congelados",
+        "en:snacks": "Snacks",
+        "en:canned-foods": "Conservas"
+    };
+    
+    for (const tag of tags) {
+        if (mapaCategorias[tag]) {
+            return mapaCategorias[tag];
+        }
+    }
+    return "Alimentos";
+}
+
+// Mostrar miniatura del producto
+function mostrarMiniatura(urlImagen) {
+    let imgContainer = document.getElementById('imagenProducto');
+    if (!imgContainer) {
+        imgContainer = document.createElement('div');
+        imgContainer.id = 'imagenProducto';
+        imgContainer.style.cssText = 'text-align:center; margin-bottom:15px;';
+        const form = document.getElementById('formProducto');
+        if (form) {
+            form.insertBefore(imgContainer, form.firstChild);
+        }
+    }
+    imgContainer.innerHTML = `<img src="${urlImagen}" style="max-width:100px; max-height:100px; border-radius:8px; object-fit:cover;" onerror="this.style.display='none'">`;
+}
+
+// Mostrar formulario con datos pre-rellenados
+function mostrarFormularioConDatos(producto) {
+    document.getElementById('codigoBarras').value = producto.codigo_barras;
+    document.getElementById('nombre').value = producto.nombre;
+    document.getElementById('categoria').value = producto.categoria;
+    document.getElementById('cantidad').value = "1";
+    document.getElementById('fechaCaducidad').value = "";
+    document.getElementById('modalTitle').textContent = '✨ Producto detectado automáticamente';
+    
+    if (producto.imagen) {
+        mostrarMiniatura(producto.imagen);
+    }
+    
+    modalProducto.style.display = 'flex';
+}
+
+// Confirmar si quiere añadir más cantidad a producto existente
+function mostrarConfirmacionAñadir(productoExistente, infoNuevo) {
+    const confirmar = confirm(
+        `📦 "${productoExistente.nombre}" ya existe en tu despensa.\n\n` +
+        `Cantidad actual: ${productoExistente.cantidad}\n` +
+        `¿Quieres AÑADIR 1 unidad más?`
+    );
+    if (confirmar) {
+        actualizarCantidad(productoExistente.codigo_barras, 1);
+        mostrarProductos(buscador ? buscador.value : '');
+        alert(`✅ Se añadió 1 unidad. Nueva cantidad: ${productoExistente.cantidad + 1}`);
+    }
+}
 });
