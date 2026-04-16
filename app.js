@@ -166,8 +166,9 @@ async function unirseADespensa(codigo) {
 }
 
 async function generarInvitacion() {
-    if (despensaActual.rol !== 'admin') {
-        alert('⚠️ Solo los administradores pueden invitar a nuevas personas.');
+    // Cualquier miembro de la familia puede invitar
+    if (!despensaActual || !despensaActual.id) {
+        alert('No hay una despensa activa.');
         return;
     }
     
