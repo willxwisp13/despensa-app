@@ -572,6 +572,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Botón invitar
     const btnInvitar = document.getElementById('btnInvitar');
     if (btnInvitar) btnInvitar.addEventListener('click', generarInvitacion);
+
+    // Botón unirse
+    const btnUnirse = document.getElementById('btnUnirse');
+    if (btnUnirse) btnUnirse.addEventListener('click', () => {
+        const codigo = prompt('🔗 Introduce el código de invitación:');
+        if (codigo && codigo.trim()) {
+            unirseADespensa(codigo.trim().toUpperCase());
+        }
+    });
     
     // Cerrar modales al hacer clic fuera
     window.addEventListener('click', (e) => {
