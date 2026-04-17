@@ -903,3 +903,87 @@ hr {
     border: none;
     border-top: 1px solid #e0e0e0;
 }
+
+/* ============================================
+   PESTAÑA PERFIL MEJORADA
+   ============================================ */
+
+.perfil-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.perfil-card h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.perfil-avatar {
+    font-size: 4rem;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.perfil-card h3#perfilEmail {
+    text-align: center;
+    word-break: break-all;
+    font-size: 1rem;
+    color: #667eea;
+}
+
+.perfil-rol {
+    text-align: center;
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 0;
+}
+
+.despensa-info p {
+    margin: 8px 0;
+    font-size: 0.9rem;
+}
+
+.despensa-info strong {
+    color: #555;
+}
+
+.lista-miembros {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.miembro-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.miembro-email {
+    font-size: 0.85rem;
+    word-break: break-all;
+    flex: 1;
+}
+
+.miembro-rol {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: #f0f0f0;
+}
+
+.miembro-rol.admin {
+    background: #fff3e0;
+    color: #ff9800;
+}
+
+.miembro-rol.miembro {
+    background: #e8f5e9;
+    color: #4caf50;
+}
