@@ -12,80 +12,79 @@
 </head>
 <body>
   <div class="app">
-    <!-- Header -->
+    <!-- Header con cámara -->
     <div class="header">
-<div class="header">
-  <div class="header-left">
-    <h1>📦 Mi Despensa</h1>
-    <span id="despensaActivaNombre" class="despensa-activa"></span>
-  </div>
-  <button id="btnModoEscaneo" class="btn-scan-header">📷</button>
-</div>
-
-<!-- Pestañas -->
-<div class="tabs">
-  <button class="tab-btn active" data-tab="productos">📦 Productos</button>
-  <button class="tab-btn" data-tab="despensas">🏠 Despensas</button>
-  <button class="tab-btn" data-tab="perfil">👤 Perfil</button>
-</div>
-
-<!-- ===== CONTENIDO PESTAÑA PRODUCTOS ===== -->
-<div id="tab-productos" class="tab-content active">
-  <!-- Estadísticas rápidas -->
-  <div class="stats">
-    <div class="stat-card">
-      <span class="stat-number" id="totalProductos">0</span>
-      <span class="stat-label">Productos</span>
+      <div class="header-left">
+        <h1>📦 Mi Despensa</h1>
+        <span id="despensaActivaNombre" class="despensa-activa"></span>
+      </div>
+      <button id="btnModoEscaneo" class="btn-scan-header">📷</button>
     </div>
-    <div class="stat-card">
-      <span class="stat-number" id="productosCriticos">0</span>
-      <span class="stat-label">Stock bajo</span>
+
+    <!-- Pestañas -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="productos">📦 Productos</button>
+      <button class="tab-btn" data-tab="despensas">🏠 Despensas</button>
+      <button class="tab-btn" data-tab="perfil">👤 Perfil</button>
     </div>
-    <div class="stat-card">
-      <span class="stat-number" id="porCaducar">0</span>
-      <span class="stat-label">Por caducar</span>
+
+    <!-- ===== CONTENIDO PESTAÑA PRODUCTOS ===== -->
+    <div id="tab-productos" class="tab-content active">
+      <!-- Estadísticas rápidas -->
+      <div class="stats">
+        <div class="stat-card">
+          <span class="stat-number" id="totalProductos">0</span>
+          <span class="stat-label">Productos</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="productosCriticos">0</span>
+          <span class="stat-label">Stock bajo</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="porCaducar">0</span>
+          <span class="stat-label">Por caducar</span>
+        </div>
+      </div>
+
+      <!-- Buscador -->
+      <div class="search-box">
+        <input type="text" id="buscador" placeholder="🔍 Buscar producto...">
+      </div>
+
+      <!-- Lista de productos -->
+      <div class="product-list" id="productList"></div>
     </div>
-  </div>
 
-  <!-- Buscador -->
-  <div class="search-box">
-    <input type="text" id="buscador" placeholder="🔍 Buscar producto...">
-  </div>
-
-  <!-- Lista de productos -->
-  <div class="product-list" id="productList"></div>
-</div>
-
-<!-- ===== CONTENIDO PESTAÑA DESPENSAS ===== -->
-<div id="tab-despensas" class="tab-content">
-  <div class="despensas-header">
-    <h3>🏠 Mis Despensas</h3>
-    <div class="despensas-buttons">
-      <button id="btnCrearDespensa" class="btn-secondary">➕ Crear</button>
-      <button id="btnUnirseDespensa" class="btn-secondary">🔗 Unirse</button>
+    <!-- ===== CONTENIDO PESTAÑA DESPENSAS ===== -->
+    <div id="tab-despensas" class="tab-content">
+      <div class="despensas-header">
+        <h3>🏠 Mis Despensas</h3>
+        <div class="despensas-buttons">
+          <button id="btnCrearDespensa" class="btn-secondary">➕ Crear</button>
+          <button id="btnUnirseDespensa" class="btn-secondary">🔗 Unirse</button>
+        </div>
+      </div>
+      <div id="listaDespensas" class="lista-despensas">
+        <!-- Aquí se cargarán las despensas -->
+      </div>
     </div>
-  </div>
-  <div id="listaDespensas" class="lista-despensas">
-    <!-- Aquí se cargarán las despensas -->
-  </div>
-</div>
 
-<!-- ===== CONTENIDO PESTAÑA PERFIL ===== -->
-<div id="tab-perfil" class="tab-content">
-  <div class="perfil-card">
-    <div class="perfil-avatar">👤</div>
-    <h3 id="perfilEmail">cargando...</h3>
-    <p id="perfilRol" class="perfil-rol"></p>
-    <hr>
-    <div class="perfil-opciones">
-      <button id="btnExportarDatos" class="btn-option">📤 Exportar datos</button>
-      <button id="btnCerrarSesion" class="btn-option">🚪 Cerrar sesión</button>
-      <button id="btnEliminarCuenta" class="btn-option danger">🗑️ Eliminar cuenta</button>
+    <!-- ===== CONTENIDO PESTAÑA PERFIL ===== -->
+    <div id="tab-perfil" class="tab-content">
+      <div class="perfil-card">
+        <div class="perfil-avatar">👤</div>
+        <h3 id="perfilEmail">cargando...</h3>
+        <p id="perfilRol" class="perfil-rol"></p>
+        <hr>
+        <div class="perfil-opciones">
+          <button id="btnExportarDatos" class="btn-option">📤 Exportar datos</button>
+          <button id="btnCerrarSesion" class="btn-option">🚪 Cerrar sesión</button>
+          <button id="btnEliminarCuenta" class="btn-option danger">🗑️ Eliminar cuenta</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-    <!-- Modal de escaneo (pantalla completa) -->
+    <!-- Modales (existentes) -->
     <div id="modalScanner" class="modal">
       <div class="modal-content scanner-modal">
         <div class="scanner-header">
@@ -105,7 +104,6 @@
       </div>
     </div>
 
-    <!-- Modal de ingreso manual -->
     <div id="modalManual" class="modal">
       <div class="modal-content small">
         <h3>Código de barras</h3>
@@ -117,7 +115,6 @@
       </div>
     </div>
 
-    <!-- Modal de producto -->
     <div id="modalProducto" class="modal">
       <div class="modal-content">
         <h3 id="modalTitle">Registrar producto</h3>
@@ -164,7 +161,6 @@
       </div>
     </div>
 
-    <!-- Modal de acciones -->
     <div id="modalAcciones" class="modal">
       <div class="modal-content small">
         <h3 id="accionesProductoNombre"></h3>
