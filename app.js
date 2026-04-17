@@ -45,13 +45,9 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 
 // Obtener el email del usuario autenticado desde Cloudflare Access
 async function obtenerUserEmail() {
-    // Si ya lo tenemos guardado, lo devolvemos
-    if (userEmail) {
-        return userEmail;
-    }
-
+    if (userEmail) return userEmail;
+    
     try {
-        // Intentar obtener el email real desde el backend
         const response = await fetch('/api/user/email');
         if (response.ok) {
             const data = await response.json();
@@ -63,9 +59,7 @@ async function obtenerUserEmail() {
         }
     } catch (error) {
         console.error('❌ Error al obtener el email:', error);
-        // Mostrar un mensaje de error amigable
         alert('No se pudo verificar tu sesión. Por favor, recarga la página e inicia sesión de nuevo.');
-        // Redirigir a la página de logout de Cloudflare para forzar una nueva autenticación
         window.location.href = '/cdn-cgi/access/logout';
         throw error;
     }
@@ -819,24 +813,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (rolElement && despensaActual) {
             rolElement.textContent = despensaActual.rol === 'admin' ? '👑 Administrador de esta despensa' : '👤 Miembro de esta despensa';
         }
-    }
-    
-    async function obtenerUserEmail() {
-        if (userEmail) return userEmail;
-        
-        try {
-            const response = await fetch('/api/user/email');
-            if (response.ok) {
-                const data = await response.json();
-                userEmail = data.email;
-                return userEmail;
-            }
-        } catch (error) {
-            console.error('Error obteniendo email:', error);
-        }
-        
-        userEmail = prompt('Introduce tu email:');
-        return userEmail;
     }
     
     // Botones de despensas
