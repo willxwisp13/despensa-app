@@ -821,6 +821,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     async function actualizarPerfil() {
+        // Información del usuario
         const emailElement = document.getElementById('perfilEmail');
         const rolElement = document.getElementById('perfilRol');
         
@@ -830,7 +831,93 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         if (rolElement && despensaActual) {
-            rolElement.textContent = despensaActual.rol === 'admin' ? '👑 Administrador de esta despensa' : '👤 Miembro de esta despensa';
+            rolElement.textContent = despensaActual.rol === 'admin' ? '👑 Administrador' : '👤 Miembro';
+        }
+        
+        // Información de la despensa activa
+        const despensaNombreElement = document.getElementById('perfilDespensaNombre');
+        const despensaRolElement = document.getElementById('perfilDespensaRol');
+        
+        if (despensaNombreElement && despensaActual) {
+            despensaNombreElement.textContent = despensaActual.nombre;
+        }
+        
+        if (despensaRolElement && despensaActual) {
+            despensaRolElement.textContent = despensaActual.rol === 'admin' ? 'Administrador' : 'Miembro';
+        }
+        
+        // Mostrar sección de miembros solo si es admin
+        const seccionMiembros = document.getElementById('seccionMiembros');
+        if (seccionMiembros && despensaActual) {
+            if (despensaActual.rol === 'admin') {
+                seccionMiembros.style.display = 'block';
+                await cargarMiembrosDespensa();
+            } else {
+                seccionMiembros.style.display = 'none';
+            }
+        }
+        
+        // Cargar código de invitación actual
+        await cargarCodigoInvitacion();
+    }
+    
+    // Cargar miembros de la despensa (solo admin)
+    async function cargarMiembrosDespensa() {
+        if (!despensaActual) return;
+        
+        try {
+            const miembros = await apiRequest(`despensas/${despensaActual.id}/miembros`);
+            const listaElement = document.getElementById('listaMiembros');
+            
+            if (listaElement) {
+                if (miembros.length === 0) {
+                    listaElement.innerHTML = '<p>No hay miembros</p>';
+                } else {
+                    listaElement.innerHTML = miembros.map(m => `
+                        <div class="miembro-item">
+                            <span class="miembro-email">${escapeHtml(m.email)}</span>
+                            <span class="miembro-rol ${m.rol}">${m.rol === 'admin' ? 'Admin' : 'Miembro'}</span>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (error) {
+            console.error('Error cargando miembros:', error);
+            const listaElement = document.getElementById('listaMiembros');
+            if (listaElement) {
+                listaElement.innerHTML = '<p>Error al cargar miembros</p>';
+            }
+        }
+    }
+    
+    // Cargar código de invitación actual
+    async function cargarCodigoInvitacion() {
+        const codigoElement = document.getElementById('perfilCodigoInvitacion');
+        if (!codigoElement || !despensaActual) return;
+        
+        codigoElement.textContent = 'No generado';
+    }
+    
+    // Generar nuevo código de invitación desde el perfil
+    async function generarCodigoDesdePerfil() {
+        if (!despensaActual) {
+            mostrarNotificacion('No hay despensa activa', 'error');
+            return;
+        }
+        
+        try {
+            const resultado = await apiRequest('invitaciones', 'POST', { despensa_id: despensaActual.id });
+            const codigoElement = document.getElementById('perfilCodigoInvitacion');
+            if (codigoElement) {
+                codigoElement.textContent = resultado.codigo;
+            }
+            mostrarNotificacion(`Código: ${resultado.codigo}`, 'success');
+            
+            await navigator.clipboard.writeText(resultado.codigo);
+            mostrarNotificacion('📋 Código copiado al portapapeles', 'success');
+        } catch (error) {
+            console.error('Error generando código:', error);
+            mostrarNotificacion('Error al generar código', 'error');
         }
     }
     
