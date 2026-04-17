@@ -43,30 +43,32 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     return response.json();
 }
 
-// Obtener el email del usuario autenticado (Cloudflare Access lo añade)
+// Obtener el email del usuario autenticado desde Cloudflare Access
 async function obtenerUserEmail() {
-    // Hacemos una petición a un endpoint que devuelve el email
+    // Si ya lo tenemos guardado, lo devolvemos
+    if (userEmail) {
+        return userEmail;
+    }
+
     try {
-        const response = await fetch('/api/despensas');
+        // Intentar obtener el email real desde el backend
+        const response = await fetch('/api/user/email');
         if (response.ok) {
-            // Si la petición funciona, el email está en los headers
-            // Pero no podemos leerlo directamente desde JS por seguridad
-            // Así que hacemos una petición específica
-            const emailResponse = await fetch('/api/user/email');
-            if (emailResponse.ok) {
-                const data = await emailResponse.json();
-                userEmail = data.email;
-            }
+            const data = await response.json();
+            userEmail = data.email;
+            console.log('✅ Email autenticado:', userEmail);
+            return userEmail;
+        } else {
+            throw new Error('No se pudo obtener el email del usuario');
         }
     } catch (error) {
-        console.error('Error obteniendo email:', error);
+        console.error('❌ Error al obtener el email:', error);
+        // Mostrar un mensaje de error amigable
+        alert('No se pudo verificar tu sesión. Por favor, recarga la página e inicia sesión de nuevo.');
+        // Redirigir a la página de logout de Cloudflare para forzar una nueva autenticación
+        window.location.href = '/cdn-cgi/access/logout';
+        throw error;
     }
-    
-    // Si no podemos obtenerlo, pedimos que escriba su email
-    if (!userEmail) {
-        userEmail = prompt('Por favor, introduce tu email (el mismo que usas para Cloudflare Access):');
-    }
-    return userEmail;
 }
 
 // ============================================
