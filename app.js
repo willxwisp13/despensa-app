@@ -846,27 +846,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             despensaRolElement.textContent = despensaActual.rol === 'admin' ? 'Administrador' : 'Miembro';
         }
         
-        // Mostrar sección de miembros solo si es admin
+        // Mostrar sección de miembros para todos los miembros
         const seccionMiembros = document.getElementById('seccionMiembros');
         if (seccionMiembros && despensaActual) {
-            if (despensaActual.rol === 'admin') {
-                seccionMiembros.style.display = 'block';
-                await cargarMiembrosDespensa();
-            } else {
-                seccionMiembros.style.display = 'none';
-            }
+            seccionMiembros.style.display = 'block';
+            await cargarMiembrosDespensa();
         }
         
         // Cargar código de invitación actual
         await cargarCodigoInvitacion();
     }
     
-    // Cargar miembros de la despensa (solo admin)
+    // Cargar miembros de la despensa 
     async function cargarMiembrosDespensa() {
         if (!despensaActual) return;
         
         try {
-            const miembros = await apiRequest(`despensas/${despensaActual.id}/miembros`);
+            // URL correcta
+            const miembros = await apiRequest(`despensas/miembros?despensa_id=${despensaActual.id}`);
             const listaElement = document.getElementById('listaMiembros');
             
             if (listaElement) {
