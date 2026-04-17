@@ -965,3 +965,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Inicializar
     await cargarDespensas();
 });
+}
