@@ -122,6 +122,13 @@ async function crearDespensa(nombre) {
         despensaActual = nuevaDespensa;
         despensasUsuario = [nuevaDespensa];
         await cargarProductos();
+        
+        // Forzar actualización del header
+        const despensaNombreElement = document.getElementById('despensaActivaNombre');
+        if (despensaNombreElement) {
+            despensaNombreElement.textContent = despensaActual.nombre;
+        }
+        
         mostrarPantallaPrincipal();
     } catch (error) {
         console.error('Error creando despensa:', error);
@@ -170,10 +177,19 @@ function mostrarSelectorDespensas() {
 }
 
 function mostrarPantallaPrincipal() {
-    const tituloElement = document.getElementById('despensaActivaNombre');
+    // Actualizar el nombre de la despensa en el header
+    const despensaNombreElement = document.getElementById('despensaActivaNombre');
+    if (despensaNombreElement) {
+        despensaNombreElement.textContent = despensaActual.nombre;
+    }
+    
+    // También actualizar el título si existe (por compatibilidad)
+    const tituloElement = document.getElementById('tituloDespensa');
     if (tituloElement) {
         tituloElement.textContent = despensaActual.nombre;
     }
+    
+    // Actualizar estadísticas
     actualizarEstadisticas();
 }
 
