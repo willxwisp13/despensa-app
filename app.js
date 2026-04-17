@@ -733,7 +733,6 @@ function escapeHtml(text) {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    document.addEventListener('DOMContentLoaded', async () => {
     // ============================================
     // SISTEMA DE PESTAÑAS
     // ============================================
