@@ -65,6 +65,28 @@ async function obtenerUserEmail() {
     }
 }
 
+// Actualizar nombre de usuario
+async function actualizarNombreUsuario(nuevoNombre) {
+    try {
+        const response = await fetch('/api/usuario/nombre', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre_usuario: nuevoNombre })
+        });
+        
+        if (response.ok) {
+            mostrarNotificacion('✅ Nombre actualizado', 'success');
+            return true;
+        } else {
+            throw new Error('Error al actualizar');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('❌ Error al actualizar nombre', 'error');
+        return false;
+    }
+}
+
 // ============================================
 // GESTIÓN DE DESPENSAS
 // ============================================
@@ -823,11 +845,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function actualizarPerfil() {
         // Información del usuario
         const emailElement = document.getElementById('perfilEmail');
+        const nombreElement = document.getElementById('perfilNombre');
         const rolElement = document.getElementById('perfilRol');
         
         if (emailElement) {
             const email = await obtenerUserEmail();
             emailElement.textContent = email || 'No disponible';
+        }
+        
+        if (nombreElement && despensaActual) {
+            const nombre = despensaActual.nombre_usuario || 'Sin nombre';
+            nombreElement.textContent = nombre;
         }
         
         if (rolElement && despensaActual) {
@@ -862,7 +890,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!despensaActual) return;
         
         try {
-            // URL correcta
             const miembros = await apiRequest(`despensas/miembros?despensa_id=${despensaActual.id}`);
             const listaElement = document.getElementById('listaMiembros');
             
@@ -872,7 +899,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else {
                     listaElement.innerHTML = miembros.map(m => `
                         <div class="miembro-item">
-                            <span class="miembro-email">${escapeHtml(m.email)}</span>
+                            <span class="miembro-nombre">${escapeHtml(m.nombre)}</span>
                             <span class="miembro-rol ${m.rol}">${m.rol === 'admin' ? 'Admin' : 'Miembro'}</span>
                         </div>
                     `).join('');
@@ -937,14 +964,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         exportarDatos();
     });
     
-    document.getElementById('btnCerrarSesion')?.addEventListener('click', () => {
+       document.getElementById('btnCerrarSesion')?.addEventListener('click', () => {
         if (confirm('¿Cerrar sesión? Deberás autenticarte de nuevo.')) {
             window.location.href = '/cdn-cgi/access/logout';
         }
     });
 
-        // Botón generar código desde perfil
+    // Botón generar código desde perfil
     document.getElementById('btnGenerarCodigoPerfil')?.addEventListener('click', generarCodigoDesdePerfil);
+    
+    // Botón editar nombre
+    document.getElementById('btnEditarNombre')?.addEventListener('click', async () => {
+        const nuevoNombre = prompt('Introduce tu nombre de usuario (visible para los miembros de la despensa):', 
+            despensaActual?.nombre_usuario || '');
+        if (nuevoNombre && nuevoNombre.trim()) {
+            await actualizarNombreUsuario(nuevoNombre.trim());
+            await cargarDespensas();
+            await actualizarPerfil();
+        }
+    });
     
     document.getElementById('btnEliminarCuenta')?.addEventListener('click', () => {
         if (confirm('⚠️ ELIMINAR CUENTA\n\nEsta acción es irreversible. Se borrarán todos tus datos.\n¿Estás segura?')) {
