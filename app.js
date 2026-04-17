@@ -733,6 +733,172 @@ function escapeHtml(text) {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+    // ============================================
+    // SISTEMA DE PESTAÑAS
+    // ============================================
+    
+    function initTabs() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        const contents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.dataset.tab;
+                
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                contents.forEach(content => content.classList.remove('active'));
+                document.getElementById(`tab-${tabId}`).classList.add('active');
+                
+                if (tabId === 'despensas') {
+                    cargarListaDespensas();
+                }
+                
+                if (tabId === 'perfil') {
+                    actualizarPerfil();
+                }
+            });
+        });
+    }
+    
+    async function cargarListaDespensas() {
+        const contenedor = document.getElementById('listaDespensas');
+        if (!contenedor) return;
+        
+        try {
+            const despensas = await apiRequest('despensas');
+            
+            if (despensas.length === 0) {
+                contenedor.innerHTML = '<div class="empty-state">📦 No tienes despensas. Crea una o únete con código.</div>';
+                return;
+            }
+            
+            contenedor.innerHTML = despensas.map(d => `
+                <div class="despensa-card ${despensaActual && despensaActual.id === d.id ? 'active' : ''}" data-id="${d.id}">
+                    <div class="despensa-info">
+                        <h4>${escapeHtml(d.nombre)}</h4>
+                        <span class="despensa-rol ${d.rol}">${d.rol === 'admin' ? '👑 Administrador' : '👤 Miembro'}</span>
+                    </div>
+                    <div class="despensa-badge">
+                        ${despensaActual && despensaActual.id === d.id ? '✅' : '➡️'}
+                    </div>
+                </div>
+            `).join('');
+            
+            document.querySelectorAll('.despensa-card').forEach(card => {
+                card.addEventListener('click', async () => {
+                    const id = card.dataset.id;
+                    const despensa = despensas.find(d => d.id === id);
+                    if (despensa) {
+                        despensaActual = despensa;
+                        document.getElementById('despensaActivaNombre').textContent = despensa.nombre;
+                        await cargarProductos();
+                        document.querySelector('.tab-btn[data-tab="productos"]').click();
+                        mostrarNotificacion(`Despensa: ${despensa.nombre}`, 'success');
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Error cargando despensas:', error);
+            contenedor.innerHTML = '<div class="empty-state">❌ Error al cargar despensas</div>';
+        }
+    }
+    
+    async function actualizarPerfil() {
+        const emailElement = document.getElementById('perfilEmail');
+        const rolElement = document.getElementById('perfilRol');
+        
+        if (emailElement) {
+            const email = await obtenerUserEmail();
+            emailElement.textContent = email || 'No disponible';
+        }
+        
+        if (rolElement && despensaActual) {
+            rolElement.textContent = despensaActual.rol === 'admin' ? '👑 Administrador de esta despensa' : '👤 Miembro de esta despensa';
+        }
+    }
+    
+    async function obtenerUserEmail() {
+        if (userEmail) return userEmail;
+        
+        try {
+            const response = await fetch('/api/user/email');
+            if (response.ok) {
+                const data = await response.json();
+                userEmail = data.email;
+                return userEmail;
+            }
+        } catch (error) {
+            console.error('Error obteniendo email:', error);
+        }
+        
+        userEmail = prompt('Introduce tu email:');
+        return userEmail;
+    }
+    
+    // Botones de despensas
+    document.getElementById('btnCrearDespensa')?.addEventListener('click', () => {
+        const nombre = prompt('📝 Nombre de la nueva despensa:');
+        if (nombre && nombre.trim()) {
+            crearDespensa(nombre.trim());
+        }
+    });
+    
+    document.getElementById('btnUnirseDespensa')?.addEventListener('click', () => {
+        const codigo = prompt('🔗 Introduce el código de invitación:');
+        if (codigo && codigo.trim()) {
+            unirseADespensa(codigo.trim().toUpperCase());
+        }
+    });
+    
+    document.getElementById('btnExportarDatos')?.addEventListener('click', () => {
+        exportarDatos();
+    });
+    
+    document.getElementById('btnCerrarSesion')?.addEventListener('click', () => {
+        if (confirm('¿Cerrar sesión? Deberás autenticarte de nuevo.')) {
+            window.location.href = '/cdn-cgi/access/logout';
+        }
+    });
+    
+    document.getElementById('btnEliminarCuenta')?.addEventListener('click', () => {
+        if (confirm('⚠️ ELIMINAR CUENTA\n\nEsta acción es irreversible. Se borrarán todos tus datos.\n¿Estás segura?')) {
+            if (confirm('Última confirmación: ¿Realmente quieres eliminar tu cuenta?')) {
+                mostrarNotificacion('Función en desarrollo', 'warning');
+            }
+        }
+    });
+    
+    async function exportarDatos() {
+        try {
+            const productos = await apiRequest(`productos?despensa_id=${despensaActual.id}`);
+            const dataStr = JSON.stringify(productos, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `despensa_${despensaActual.nombre}_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            mostrarNotificacion('📤 Datos exportados', 'success');
+        } catch (error) {
+            mostrarNotificacion('Error al exportar', 'error');
+        }
+    }
+    
+    function actualizarNombreDespensaActiva() {
+        const span = document.getElementById('despensaActivaNombre');
+        if (span && despensaActual) {
+            span.textContent = despensaActual.nombre;
+        }
+    }
+    
+    // Inicializar pestañas
+    initTabs();
+    actualizarNombreDespensaActiva();
+    
     // Configurar eventos
     if (btnModoEscaneo) btnModoEscaneo.addEventListener('click', iniciarScanner);
     
