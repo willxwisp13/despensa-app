@@ -74,7 +74,9 @@
     <!-- Información del usuario -->
     <div class="perfil-card">
         <div class="perfil-avatar">👤</div>
-        <h3 id="perfilEmail">cargando...</h3>
+        <h3 id="perfilNombre">cargando...</h3>
+        <button id="btnEditarNombre" class="btn-option-small">✏️ Cambiar nombre</button>
+        <p id="perfilEmail" class="perfil-email">cargando...</p>
         <p id="perfilRol" class="perfil-rol"></p>
         <hr>
         <div class="perfil-opciones">
@@ -93,8 +95,8 @@
         <button id="btnGenerarCodigoPerfil" class="btn-secondary">🔄 Generar nuevo código</button>
     </div>
     
-    <!-- Lista de miembros (solo para admin) -->
-    <div id="seccionMiembros" class="perfil-card" style="display: none;">
+    <!-- Lista de miembros -->
+    <div id="seccionMiembros" class="perfil-card">
         <h3>👥 Miembros de la despensa</h3>
         <div id="listaMiembros" class="lista-miembros">
             <p>Cargando...</p>
