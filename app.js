@@ -170,7 +170,10 @@ function mostrarSelectorDespensas() {
 }
 
 function mostrarPantallaPrincipal() {
-    document.getElementById('tituloDespensa').textContent = despensaActual.nombre;
+    const tituloElement = document.getElementById('despensaActivaNombre');
+    if (tituloElement) {
+        tituloElement.textContent = despensaActual.nombre;
+    }
     actualizarEstadisticas();
 }
 
