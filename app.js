@@ -945,6 +945,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = '/cdn-cgi/access/logout';
         }
     });
+
+        // Botón generar código desde perfil
+    document.getElementById('btnGenerarCodigoPerfil')?.addEventListener('click', generarCodigoDesdePerfil);
     
     document.getElementById('btnEliminarCuenta')?.addEventListener('click', () => {
         if (confirm('⚠️ ELIMINAR CUENTA\n\nEsta acción es irreversible. Se borrarán todos tus datos.\n¿Estás segura?')) {
