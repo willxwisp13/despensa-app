@@ -987,3 +987,38 @@ hr {
     background: #e8f5e9;
     color: #4caf50;
 }
+
+/* ============================================
+   ESTILOS PARA PERFIL CON NOMBRES DE USUARIO
+   ============================================ */
+
+.btn-option-small {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    background: #f0f0f0;
+    color: #333;
+    transition: all 0.2s;
+    margin-top: 5px;
+    display: inline-block;
+}
+
+.btn-option-small:active {
+    transform: scale(0.95);
+}
+
+.perfil-email {
+    font-size: 0.8rem;
+    color: #888;
+    word-break: break-all;
+    margin-top: 10px;
+}
+
+.miembro-nombre {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+    flex: 1;
+}
