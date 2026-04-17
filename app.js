@@ -259,6 +259,7 @@ function mostrarProductos() {
     
     productList.innerHTML = filtrados.map(p => {
         const stockClass = p.cantidad <= 2 ? (p.cantidad === 0 ? 'product-critico' : 'product-bajo-stock') : '';
+        const cantidad = p.cantidad;
         
         return `
             <div class="product-item ${stockClass}" data-codigo="${p.codigo_barras}">
@@ -268,21 +269,177 @@ function mostrarProductos() {
                     ${p.fecha_caducidad ? `<div class="product-caducidad">⏰ Cad: ${new Date(p.fecha_caducidad).toLocaleDateString()}</div>` : ''}
                     <div class="product-ubicacion">📍 ${p.ubicacion || 'Sin ubicación'}</div>
                 </div>
-                <div class="product-cantidad">
-                    <div class="cantidad-number">${p.cantidad}</div>
-                    <div class="cantidad-unidad">unidades</div>
+                <div class="product-actions">
+                    <button class="btn-decrement" data-codigo="${p.codigo_barras}" ${cantidad === 0 ? 'disabled' : ''}>−</button>
+                    <div class="product-cantidad">
+                        <div class="cantidad-number">${cantidad}</div>
+                        <div class="cantidad-unidad">unidades</div>
+                    </div>
+                    <button class="btn-increment" data-codigo="${p.codigo_barras}">+</button>
                 </div>
             </div>
         `;
     }).join('');
     
-    document.querySelectorAll('.product-item').forEach(el => {
-        el.addEventListener('click', () => {
-            const codigo = el.dataset.codigo;
+    // Evento para el nombre del producto (abrir acciones)
+    document.querySelectorAll('.product-info').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const productItem = el.closest('.product-item');
+            const codigo = productItem.dataset.codigo;
             const producto = productosActuales.find(p => p.codigo_barras === codigo);
             if (producto) mostrarAccionesProducto(producto);
         });
     });
+    
+    // Evento para botón restar (-1)
+    document.querySelectorAll('.btn-decrement').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const codigo = btn.dataset.codigo;
+            const producto = productosActuales.find(p => p.codigo_barras === codigo);
+            if (producto && producto.cantidad > 0) {
+                await consumirProductoRapido(codigo);
+            }
+        });
+    });
+    
+    // Evento para botón sumar (+1)
+    document.querySelectorAll('.btn-increment').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const codigo = btn.dataset.codigo;
+            await agregarProductoRapido(codigo);
+        });
+    });
+}
+
+// Consumir rápido (-1)
+async function consumirProductoRapido(codigo) {
+    const producto = productosActuales.find(p => p.codigo_barras === codigo);
+    if (!producto) return;
+    
+    if (producto.cantidad <= 0) {
+        mostrarNotificacion('No hay suficientes unidades', 'error');
+        return;
+    }
+    
+    try {
+        await apiRequest('consumir', 'POST', {
+            despensa_id: despensaActual.id,
+            codigo_barras: codigo
+        });
+        
+        // Actualizar la cantidad localmente para respuesta inmediata
+        producto.cantidad--;
+        
+        // Actualizar la UI
+        actualizarCantidadEnUI(codigo, producto.cantidad);
+        actualizarEstadisticas();
+        
+        mostrarNotificacion(`-1 ${producto.nombre}`, 'success');
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error al consumir', 'error');
+        // Recargar para sincronizar
+        await cargarProductos();
+    }
+}
+
+// Agregar rápido (+1)
+async function agregarProductoRapido(codigo) {
+    const producto = productosActuales.find(p => p.codigo_barras === codigo);
+    if (!producto) return;
+    
+    try {
+        await apiRequest('productos', 'POST', {
+            despensa_id: despensaActual.id,
+            codigo_barras: producto.codigo_barras,
+            nombre: producto.nombre,
+            categoria: producto.categoria,
+            cantidad: producto.cantidad + 1,
+            fecha_caducidad: producto.fecha_caducidad,
+            ubicacion: producto.ubicacion
+        });
+        
+        // Actualizar la cantidad localmente para respuesta inmediata
+        producto.cantidad++;
+        
+        // Actualizar la UI
+        actualizarCantidadEnUI(codigo, producto.cantidad);
+        actualizarEstadisticas();
+        
+        mostrarNotificacion(`+1 ${producto.nombre}`, 'success');
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error al agregar', 'error');
+        // Recargar para sincronizar
+        await cargarProductos();
+    }
+}
+
+// Actualizar la cantidad en la UI sin recargar toda la lista
+function actualizarCantidadEnUI(codigo, nuevaCantidad) {
+    const productItem = document.querySelector(`.product-item[data-codigo="${codigo}"]`);
+    if (productItem) {
+        const cantidadDiv = productItem.querySelector('.cantidad-number');
+        if (cantidadDiv) {
+            cantidadDiv.textContent = nuevaCantidad;
+        }
+        
+        // Actualizar clase de stock
+        const stockClass = nuevaCantidad <= 2 ? (nuevaCantidad === 0 ? 'product-critico' : 'product-bajo-stock') : '';
+        productItem.className = `product-item ${stockClass}`;
+        
+        // Habilitar/deshabilitar botón restar
+        const decrementBtn = productItem.querySelector('.btn-decrement');
+        if (decrementBtn) {
+            if (nuevaCantidad === 0) {
+                decrementBtn.setAttribute('disabled', 'disabled');
+            } else {
+                decrementBtn.removeAttribute('disabled');
+            }
+        }
+    }
+}
+
+// Sistema de notificaciones toast
+let toastTimeout = null;
+
+function mostrarNotificacion(mensaje, tipo = 'info') {
+    // Eliminar toast existente
+    const toastExistente = document.querySelector('.toast-notification');
+    if (toastExistente) {
+        toastExistente.remove();
+    }
+    if (toastTimeout) {
+        clearTimeout(toastTimeout);
+    }
+    
+    // Crear nuevo toast
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${tipo}`;
+    
+    let icono = 'ℹ️';
+    if (tipo === 'success') icono = '✅';
+    if (tipo === 'error') icono = '❌';
+    if (tipo === 'warning') icono = '⚠️';
+    
+    toast.innerHTML = `${icono} ${mensaje}`;
+    document.body.appendChild(toast);
+    
+    // Mostrar con animación
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    // Ocultar después de 2 segundos
+    toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) toast.remove();
+        }, 300);
+    }, 2000);
 }
 
 function actualizarEstadisticas() {
