@@ -28,32 +28,74 @@
       <button class="tab-btn" data-tab="perfil">👤 Perfil</button>
     </div>
 
-    <!-- ===== CONTENIDO PESTAÑA PRODUCTOS ===== -->
-    <div id="tab-productos" class="tab-content active">
-      <!-- Estadísticas rápidas -->
-      <div class="stats">
-        <div class="stat-card">
-          <span class="stat-number" id="totalProductos">0</span>
-          <span class="stat-label">Productos</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number" id="productosCriticos">0</span>
-          <span class="stat-label">Stock bajo</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number" id="porCaducar">0</span>
-          <span class="stat-label">Por caducar</span>
-        </div>
-      </div>
-
-      <!-- Buscador -->
-      <div class="search-box">
-        <input type="text" id="buscador" placeholder="🔍 Buscar producto...">
-      </div>
-
-      <!-- Lista de productos -->
-      <div class="product-list" id="productList"></div>
+<!-- ===== CONTENIDO PESTAÑA PRODUCTOS ===== -->
+<div id="tab-productos" class="tab-content active">
+  <!-- Estadísticas rápidas -->
+  <div class="stats">
+    <div class="stat-card stat-clickable" data-filtro="stock-bajo">
+      <span class="stat-number" id="totalProductos">0</span>
+      <span class="stat-label">Productos</span>
     </div>
+    <div class="stat-card stat-clickable" data-filtro="stock-bajo">
+      <span class="stat-number" id="productosCriticos">0</span>
+      <span class="stat-label">Stock bajo</span>
+    </div>
+    <div class="stat-card stat-clickable" data-filtro="por-caducar">
+      <span class="stat-number" id="porCaducar">0</span>
+      <span class="stat-label">Por caducar</span>
+    </div>
+  </div>
+
+  <!-- Filtros avanzados -->
+  <div class="filtros-container">
+    <div class="filtros-header" id="btnToggleFiltros">
+      <span>🔍 Filtros avanzados</span>
+      <span class="filtros-toggle-icon">▼</span>
+    </div>
+    <div class="filtros-body" id="filtrosBody" style="display: none;">
+      <!-- Filtro por categoría -->
+      <div class="filtro-grupo">
+        <label>Categoría</label>
+        <select id="filtroCategoria" class="filtro-select">
+          <option value="todas">Todas las categorías</option>
+          <option value="Alimentos">🥫 Alimentos</option>
+          <option value="Bebidas">🥤 Bebidas</option>
+          <option value="Limpieza">🧹 Limpieza</option>
+          <option value="Frescos">🥬 Frescos</option>
+          <option value="Congelados">❄️ Congelados</option>
+          <option value="Otros">📦 Otros</option>
+        </select>
+      </div>
+      
+      <!-- Filtro por ubicación -->
+      <div class="filtro-grupo">
+        <label>Ubicación</label>
+        <select id="filtroUbicacion" class="filtro-select">
+          <option value="todas">Todas las ubicaciones</option>
+          <option value="Estante 1">📌 Estante 1</option>
+          <option value="Estante 2">📌 Estante 2</option>
+          <option value="Estante 3">📌 Estante 3</option>
+          <option value="Nevera">🧊 Nevera</option>
+          <option value="Congelador">❄️ Congelador</option>
+        </select>
+      </div>
+      
+      <!-- Botones de acción -->
+      <div class="filtros-buttons">
+        <button id="btnAplicarFiltros" class="btn-filtro-aplicar">Aplicar filtros</button>
+        <button id="btnLimpiarFiltros" class="btn-filtro-limpiar">Limpiar filtros</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buscador -->
+  <div class="search-box">
+    <input type="text" id="buscador" placeholder="🔍 Buscar producto...">
+  </div>
+
+  <!-- Lista de productos -->
+  <div class="product-list" id="productList"></div>
+</div>
 
     <!-- ===== CONTENIDO PESTAÑA DESPENSAS ===== -->
     <div id="tab-despensas" class="tab-content">
