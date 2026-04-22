@@ -252,6 +252,15 @@ body {
     object-fit: cover;
 }
 
+/* Estilos de depuración (opcional, para probar) */
+#video {
+  border: 2px solid red;
+}
+
+.scanner-container {
+  border: 2px solid blue;
+}
+
 .scan-overlay {
   position: absolute;
   top: 0;
