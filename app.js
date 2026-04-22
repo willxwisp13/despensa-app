@@ -8,7 +8,6 @@ let despensasUsuario = [];
 let productosActuales = [];
 let scannerActivo = false;
 let userEmail = null;
-// Variables de filtros
 let filtroActivo = {
     tipo: 'todos', // 'todos', 'stock-bajo', 'por-caducar'
     categoria: 'todas',
@@ -464,65 +463,6 @@ function limpiarFiltros() {
     mostrarProductos();
     mostrarNotificacion('Filtros limpiados', 'info');
 }
-
-// Aplicar filtro por tipo (stock bajo / por caducar)
-function aplicarFiltroPorTipo(tipo) {
-    filtroActivo.tipo = tipo;
-    // Limpiar selección visual de estadísticas
-    document.querySelectorAll('.stat-card').forEach(card => {
-        card.style.background = '';
-    });
-    
-    if (tipo === 'todos') {
-        // Resetear también los filtros de categoría y ubicación
-        filtroActivo.categoria = 'todas';
-        filtroActivo.ubicacion = 'todas';
-        if (document.getElementById('filtroCategoria')) {
-            document.getElementById('filtroCategoria').value = 'todas';
-        }
-        if (document.getElementById('filtroUbicacion')) {
-            document.getElementById('filtroUbicacion').value = 'todas';
-        }
-        mostrarNotificacion('Mostrando todos los productos', 'info');
-    } else if (tipo === 'stock-bajo') {
-        document.querySelector('.stat-card:nth-child(2)').style.background = '#fff3e0';
-        mostrarNotificacion('Mostrando productos con stock bajo', 'info');
-    } else if (tipo === 'por-caducar') {
-        document.querySelector('.stat-card:nth-child(3)').style.background = '#ffebee';
-        mostrarNotificacion('Mostrando productos próximos a caducar', 'info');
-    }
-    
-    mostrarProductos();
-}
-
-// Aplicar todos los filtros desde el panel
-function aplicarFiltrosDesdePanel() {
-    filtroActivo.categoria = document.getElementById('filtroCategoria').value;
-    filtroActivo.ubicacion = document.getElementById('filtroUbicacion').value;
-    // Mantener el tipo actual (no lo cambiamos desde aquí)
-    mostrarProductos();
-    mostrarNotificacion('Filtros aplicados', 'success');
-}
-
-// Limpiar todos los filtros
-function limpiarFiltros() {
-    filtroActivo = {
-        tipo: 'todos',
-        categoria: 'todas',
-        ubicacion: 'todas'
-    };
-    // Resetear selects
-    document.getElementById('filtroCategoria').value = 'todas';
-    document.getElementById('filtroUbicacion').value = 'todas';
-    // Resetear estilo de estadísticas
-    document.querySelectorAll('.stat-card').forEach(card => {
-        card.style.background = '';
-    });
-    // Limpiar buscador
-    if (buscador) buscador.value = '';
-    mostrarProductos();
-    mostrarNotificacion('Filtros limpiados', 'info');
-}  
 
 // Consumir rápido (-1)
 async function consumirProductoRapido(codigo) {
