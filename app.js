@@ -390,11 +390,26 @@ function aplicarFiltroPorTipo(tipo) {
     document.querySelectorAll('.stat-card').forEach(card => {
         card.style.background = '';
     });
-    if (tipo === 'stock-bajo') {
+    
+    if (tipo === 'todos') {
+        // Resetear también los filtros de categoría y ubicación
+        filtroActivo.categoria = 'todas';
+        filtroActivo.ubicacion = 'todas';
+        if (document.getElementById('filtroCategoria')) {
+            document.getElementById('filtroCategoria').value = 'todas';
+        }
+        if (document.getElementById('filtroUbicacion')) {
+            document.getElementById('filtroUbicacion').value = 'todas';
+        }
+        mostrarNotificacion('Mostrando todos los productos', 'info');
+    } else if (tipo === 'stock-bajo') {
         document.querySelector('.stat-card:nth-child(2)').style.background = '#fff3e0';
+        mostrarNotificacion('Mostrando productos con stock bajo', 'info');
     } else if (tipo === 'por-caducar') {
         document.querySelector('.stat-card:nth-child(3)').style.background = '#ffebee';
+        mostrarNotificacion('Mostrando productos próximos a caducar', 'info');
     }
+    
     mostrarProductos();
 }
 
@@ -957,7 +972,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // SISTEMA DE PESTAÑAS
     // ============================================
 
-        // Eventos de filtros
+    // Eventos de filtros por tipo 
+    document.querySelectorAll('.stat-card[data-filtro="todos"]')?.forEach(el => {
+        el.addEventListener('click', () => aplicarFiltroPorTipo('todos'));
+    });
     document.querySelectorAll('.stat-card[data-filtro="stock-bajo"]')?.forEach(el => {
         el.addEventListener('click', () => aplicarFiltroPorTipo('stock-bajo'));
     });
