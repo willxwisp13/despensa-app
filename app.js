@@ -592,31 +592,21 @@ function iniciarScanner() {
     // Mostrar modal
     modalScanner.style.display = 'flex';
     
-    // Asegurar que el video está visible
-    const videoElement = document.querySelector('#video');
-    if (videoElement) {
-        videoElement.style.display = 'block';
-        videoElement.style.width = '100%';
-        videoElement.style.height = '100%';
-        videoElement.style.objectFit = 'cover';
-    }
-    
     // Detener Quagga si ya está activo
     if (scannerActivo) {
         Quagga.stop();
         scannerActivo = false;
     }
     
-    // Configurar Quagga
+    // Configurar Quagga - usando 'environment' directamente
     Quagga.init({
         inputStream: {
             name: "Live",
             type: "LiveStream",
-            target: document.querySelector('#video'),
             constraints: {
                 facingMode: "environment",
-                width: { ideal: 640 },
-                height: { ideal: 480 }
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
             }
         },
         locator: {
@@ -639,22 +629,26 @@ function iniciarScanner() {
         console.log('Quagga iniciado correctamente');
         Quagga.start();
         scannerActivo = true;
+        
+        // Opcional: intentar asignar el video manualmente después de un momento
+        setTimeout(() => {
+            const videoElement = document.querySelector('#video');
+            if (videoElement && videoElement.srcObject) {
+                console.log('✅ Stream de cámara asignado correctamente');
+            } else {
+                console.log('⚠️ Stream de cámara no disponible, pero puede funcionar igual');
+            }
+        }, 500);
     });
     
-    // Cuando detecta un código
     Quagga.onDetected(function(result) {
         if (result && result.codeResult) {
             const codigo = result.codeResult.code;
             console.log('Código detectado:', codigo);
             
-            // Detener escáner
             Quagga.stop();
             scannerActivo = false;
-            
-            // Cerrar modal
             modalScanner.style.display = 'none';
-            
-            // Procesar código
             procesarCodigo(codigo);
         }
     });
