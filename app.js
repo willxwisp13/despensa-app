@@ -636,14 +636,18 @@ function detenerScanner() {
     }
 }
 
-function mostrarCargando(mostrar) {
+function mostrarCargando(mostrar, mensaje = '🔍 Buscando producto...') {
     let loader = document.getElementById('loadingIndicator');
     if (!loader && mostrar) {
         loader = document.createElement('div');
         loader.id = 'loadingIndicator';
-        loader.innerHTML = '<div class="loader">🔍 Buscando producto...</div>';
+        loader.innerHTML = `<div class="loader">${mensaje}</div>`;
         loader.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:20px; border-radius:10px; z-index:9999; box-shadow:0 2px 10px rgba(0,0,0,0.2);';
         document.body.appendChild(loader);
+    } else if (mostrar && loader) {
+        // Actualizar mensaje si ya existe
+        const loaderDiv = loader.querySelector('.loader');
+        if (loaderDiv) loaderDiv.innerHTML = mensaje;
     } else if (!mostrar && loader) {
         loader.remove();
     }
