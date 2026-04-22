@@ -743,8 +743,8 @@ function extraerCategoria(tags) {
 }
 
 async function procesarCodigo(codigo) {
-    // Buscar en Open Food Facts
-    const infoProducto = await buscarEnOpenFoodFacts(codigo);
+    // Buscar en múltiples fuentes
+    const infoProducto = await buscarEnMultiplesFuentes(codigo);
     
     // Verificar si ya existe en la despensa
     const productoExistente = productosActuales.find(p => p.codigo_barras === codigo);
