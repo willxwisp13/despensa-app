@@ -12,14 +12,21 @@
 </head>
 <body>
   <div class="app">
-    <!-- Header con cámara -->
-    <div class="header">
-      <div class="header-left">
-        <h1>📦 Mi Despensa</h1>
-        <span id="despensaActivaNombre" class="despensa-activa"></span>
-      </div>
-      <button id="btnModoEscaneo" class="btn-scan-header">📷</button>
-    </div>
+    
+  <!-- Header con cámara -->
+<div class="header">
+  <div class="header-left">
+    <h1>📦 Mi Despensa</h1>
+    <span id="despensaActivaNombre" class="despensa-activa"></span>
+  </div>
+  <div class="header-right">
+    <button id="btnNotificaciones" class="btn-notificaciones">
+      🔔
+      <span id="badgeNotificaciones" class="badge-notificacion" style="display: none;">0</span>
+    </button>
+    <button id="btnModoEscaneo" class="btn-scan-header">📷</button>
+  </div>
+</div>
 
     <!-- Pestañas -->
     <div class="tabs">
