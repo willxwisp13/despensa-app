@@ -589,27 +589,95 @@ function editarProducto() {
 // ============================================
 
 function iniciarScanner() {
+    // Mostrar modal
     modalScanner.style.display = 'flex';
     
+    // Obtener el elemento video
     const videoElement = document.querySelector('#video');
     if (!videoElement) {
+        console.error('❌ No se encontró el elemento #video');
         alert('Error: No se encontró la cámara');
         modalScanner.style.display = 'none';
         return;
     }
     
-    // Pedir permisos de cámara manualmente
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(stream => {
-            videoElement.srcObject = stream;
-            videoElement.play();
-            console.log('✅ Cámara funcionando manualmente');
-        })
-        .catch(err => {
-            console.error('Error al acceder a la cámara:', err);
-            alert('No se pudo acceder a la cámara');
-            modalScanner.style.display = 'none';
+    // Detener Quagga si ya está activo
+    if (scannerActivo) {
+        Quagga.stop();
+        scannerActivo = false;
+    }
+    
+    // 1. PRIMERO: Obtener el stream de la cámara manualmente
+    navigator.mediaDevices.getUserMedia({ 
+        video: { 
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        } 
+    })
+    .then(stream => {
+        console.log('✅ Stream de cámara obtenido manualmente');
+        
+        // Asignar el stream al elemento video para que se vea
+        videoElement.srcObject = stream;
+        videoElement.play();
+        
+        // 2. SEGUNDO: Inicializar Quagga usando el mismo stream
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: videoElement,
+                constraints: {
+                    facingMode: "environment"
+                }
+            },
+            locator: {
+                patchSize: "medium",
+                halfSample: true
+            },
+            decoder: {
+                readers: ["ean_reader", "ean_8_reader", "code_128_reader"]
+            },
+            locate: true,
+            numOfWorkers: 0
+        }, function(err) {
+            if (err) {
+                console.error('Quagga error:', err);
+                alert('Error al iniciar Quagga: ' + (err.message || 'desconocido'));
+                return;
+            }
+            
+            console.log('Quagga iniciado correctamente');
+            Quagga.start();
+            scannerActivo = true;
         });
+        
+        // 3. Detectar códigos
+        Quagga.onDetected(function(result) {
+            if (result && result.codeResult) {
+                const codigo = result.codeResult.code;
+                console.log('Código detectado:', codigo);
+                
+                Quagga.stop();
+                scannerActivo = false;
+                
+                // Limpiar el stream de la cámara
+                if (videoElement.srcObject) {
+                    videoElement.srcObject.getTracks().forEach(track => track.stop());
+                    videoElement.srcObject = null;
+                }
+                
+                modalScanner.style.display = 'none';
+                procesarCodigo(codigo);
+            }
+        });
+    })
+    .catch(err => {
+        console.error('❌ Error al acceder a la cámara:', err);
+        alert('No se pudo acceder a la cámara. Por favor, verifica los permisos.');
+        modalScanner.style.display = 'none';
+    });
 }
 
 function detenerScanner() {
