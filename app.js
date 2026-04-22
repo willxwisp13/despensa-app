@@ -13,6 +13,11 @@ let filtroActivo = {
     categoria: 'todas',
     ubicacion: 'todas'
 };
+let notificaciones = {
+    stockBajo: [],
+    porCaducar: [],
+    miembrosNuevos: []
+};
 
 // Elementos DOM
 const modalScanner = document.getElementById('modalScanner');
@@ -1016,6 +1021,100 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (toggleIcon) toggleIcon.classList.toggle('rotated');
         });
     }
+
+    // Contar notificaciones activas
+function contarNotificaciones() {
+    let total = 0;
+    if (notificaciones.stockBajo) total += notificaciones.stockBajo.length;
+    if (notificaciones.porCaducar) total += notificaciones.porCaducar.length;
+    if (notificaciones.miembrosNuevos) total += notificaciones.miembrosNuevos.length;
+    
+    const badge = document.getElementById('badgeNotificaciones');
+    if (badge) {
+        if (total > 0) {
+            badge.textContent = total > 99 ? '99+' : total;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+    return total;
+}
+
+    // Actualizar lista de notificaciones
+function actualizarNotificaciones() {
+    // Stock bajo
+    notificaciones.stockBajo = productosActuales.filter(p => p.cantidad > 0 && p.cantidad <= 2);
+    
+    // Por caducar (próximos 7 días)
+    const hoy = new Date();
+    notificaciones.porCaducar = productosActuales.filter(p => {
+        if (!p.fecha_caducidad) return false;
+        const fechaCad = new Date(p.fecha_caducidad);
+        const dias = (fechaCad - hoy) / (1000 * 60 * 60 * 24);
+        return dias > 0 && dias <= 7;
+    });
+    
+    // Ordenar por fecha de caducidad (los más próximos primero)
+    notificaciones.porCaducar.sort((a, b) => new Date(a.fecha_caducidad) - new Date(b.fecha_caducidad));
+    
+    // Miembros nuevos (por ahora vacío, se puede implementar después)
+    
+    contarNotificaciones();
+    actualizarPanelNotificaciones();
+}
+
+    // Mostrar panel de notificaciones
+function mostrarPanelNotificaciones() {
+    const modal = document.getElementById('modalNotificaciones');
+    if (modal) {
+        actualizarPanelNotificaciones();
+        modal.style.display = 'flex';
+    }
+}
+
+// Actualizar contenido del panel
+function actualizarPanelNotificaciones() {
+    // Stock bajo
+    const listaStock = document.getElementById('listaStockBajo');
+    if (listaStock) {
+        if (notificaciones.stockBajo.length === 0) {
+            listaStock.innerHTML = '<div class="notificacion-vacia">✅ Sin productos con stock bajo</div>';
+        } else {
+            listaStock.innerHTML = notificaciones.stockBajo.map(p => `
+                <div class="notificacion-item">
+                    <span class="icono">⚠️</span>
+                    <span class="texto">${escapeHtml(p.nombre)} - quedan ${p.cantidad} ${p.cantidad === 1 ? 'unidad' : 'unidades'}</span>
+                </div>
+            `).join('');
+        }
+    }
+    
+    // Próximos a caducar
+    const listaCaducar = document.getElementById('listaPorCaducar');
+    if (listaCaducar) {
+        if (notificaciones.porCaducar.length === 0) {
+            listaCaducar.innerHTML = '<div class="notificacion-vacia">✅ Sin productos próximos a caducar</div>';
+        } else {
+            listaCaducar.innerHTML = notificaciones.porCaducar.map(p => {
+                const dias = Math.ceil((new Date(p.fecha_caducidad) - new Date()) / (1000 * 60 * 60 * 24));
+                let textoDias = '';
+                if (dias === 1) textoDias = 'caduca mañana';
+                else if (dias === 0) textoDias = 'caduca hoy';
+                else textoDias = `caduca en ${dias} días`;
+                return `
+                    <div class="notificacion-item">
+                        <span class="icono">⏰</span>
+                        <span class="texto">${escapeHtml(p.nombre)} - ${textoDias}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+}
+
+    
+
     
     // Botones de filtros
     document.getElementById('btnAplicarFiltros')?.addEventListener('click', aplicarFiltrosDesdePanel);
