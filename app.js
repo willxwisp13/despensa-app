@@ -622,7 +622,7 @@ function iniciarScanner() {
         videoElement.srcObject = stream;
         videoElement.play();
         
-        // 2. SEGUNDO: Inicializar Quagga usando el mismo stream
+        // 2. SEGUNDO: Inicializar Quagga usando el mismo stream (configuración mejorada)
         Quagga.init({
             inputStream: {
                 name: "Live",
@@ -633,14 +633,16 @@ function iniciarScanner() {
                 }
             },
             locator: {
-                patchSize: "medium",
-                halfSample: true
+                patchSize: "x-large",      // Mayor precisión
+                halfSample: false,
+                locate: true               // Buscar códigos en toda la imagen
             },
             decoder: {
                 readers: ["ean_reader", "ean_8_reader", "code_128_reader"]
             },
             locate: true,
-            numOfWorkers: 0
+            numOfWorkers: 2,               // Mejor rendimiento
+            frequency: 10                  // Escanea más frecuentemente
         }, function(err) {
             if (err) {
                 console.error('Quagga error:', err);
