@@ -244,6 +244,30 @@
     </div>
   </div>
 
+      <!-- Modal de notificaciones -->
+    <div id="modalNotificaciones" class="modal">
+      <div class="modal-content notificaciones-modal">
+        <div class="notificaciones-header">
+          <h3>🔔 Notificaciones</h3>
+          <button class="close-btn" id="closeNotificaciones">&times;</button>
+        </div>
+        <div class="notificaciones-body" id="notificacionesBody">
+          <div class="notificacion-grupo">
+            <h4>⚠️ Stock bajo</h4>
+            <div id="listaStockBajo" class="lista-notificaciones"></div>
+          </div>
+          <div class="notificacion-grupo">
+            <h4>⏰ Próximos a caducar</h4>
+            <div id="listaPorCaducar" class="lista-notificaciones"></div>
+          </div>
+          <div class="notificacion-grupo">
+            <h4>👥 Miembros</h4>
+            <div id="listaMiembrosNuevos" class="lista-notificaciones"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
   <script src="app.js"></script>
 </body>
