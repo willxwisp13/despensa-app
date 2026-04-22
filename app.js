@@ -8,6 +8,12 @@ let despensasUsuario = [];
 let productosActuales = [];
 let scannerActivo = false;
 let userEmail = null;
+// Variables de filtros
+let filtroActivo = {
+    tipo: 'todos', // 'todos', 'stock-bajo', 'por-caducar'
+    categoria: 'todas',
+    ubicacion: 'todas'
+};
 
 // Elementos DOM
 const modalScanner = document.getElementById('modalScanner');
@@ -281,16 +287,44 @@ async function cargarProductos() {
 }
 
 function mostrarProductos() {
-    const filtro = buscador ? buscador.value.toLowerCase() : '';
-    const filtrados = productosActuales.filter(p => 
-        p.nombre.toLowerCase().includes(filtro) ||
-        p.codigo_barras.includes(filtro)
+    const textoBusqueda = buscador ? buscador.value.toLowerCase() : '';
+    
+    let filtrados = [...productosActuales];
+    
+    // 1. Filtrar por tipo (stock bajo / por caducar)
+    if (filtroActivo.tipo === 'stock-bajo') {
+        filtrados = filtrados.filter(p => p.cantidad > 0 && p.cantidad <= 2);
+    } else if (filtroActivo.tipo === 'por-caducar') {
+        filtrados = filtrados.filter(p => {
+            if (!p.fecha_caducidad) return false;
+            const dias = (new Date(p.fecha_caducidad) - new Date()) / (1000 * 60 * 60 * 24);
+            return dias > 0 && dias <= 7;
+        });
+    }
+    
+    // 2. Filtrar por categoría
+    if (filtroActivo.categoria !== 'todas') {
+        filtrados = filtrados.filter(p => p.categoria === filtroActivo.categoria);
+    }
+    
+    // 3. Filtrar por ubicación
+    if (filtroActivo.ubicacion !== 'todas') {
+        filtrados = filtrados.filter(p => p.ubicacion === filtroActivo.ubicacion);
+    }
+    
+    // 4. Filtrar por texto de búsqueda
+    filtrados = filtrados.filter(p => 
+        p.nombre.toLowerCase().includes(textoBusqueda) ||
+        p.codigo_barras.includes(textoBusqueda)
     );
     
     filtrados.sort((a, b) => a.nombre.localeCompare(b.nombre));
     
     if (filtrados.length === 0) {
-        productList.innerHTML = '<div class="empty-state">📦 No hay productos en la despensa</div>';
+        let mensaje = '📦 No hay productos';
+        if (filtroActivo.tipo === 'stock-bajo') mensaje = '📦 No hay productos con stock bajo';
+        else if (filtroActivo.tipo === 'por-caducar') mensaje = '📦 No hay productos próximos a caducar';
+        productList.innerHTML = `<div class="empty-state">${mensaje}</div>`;
         return;
     }
     
@@ -318,7 +352,7 @@ function mostrarProductos() {
         `;
     }).join('');
     
-    // Evento para el nombre del producto (abrir acciones)
+    // Eventos (igual que antes)
     document.querySelectorAll('.product-info').forEach(el => {
         el.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -329,7 +363,6 @@ function mostrarProductos() {
         });
     });
     
-    // Evento para botón restar (-1)
     document.querySelectorAll('.btn-decrement').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
@@ -341,7 +374,6 @@ function mostrarProductos() {
         });
     });
     
-    // Evento para botón sumar (+1)
     document.querySelectorAll('.btn-increment').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
@@ -350,6 +382,50 @@ function mostrarProductos() {
         });
     });
 }
+
+// Aplicar filtro por tipo (stock bajo / por caducar)
+function aplicarFiltroPorTipo(tipo) {
+    filtroActivo.tipo = tipo;
+    // Limpiar selección visual de estadísticas
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.style.background = '';
+    });
+    if (tipo === 'stock-bajo') {
+        document.querySelector('.stat-card:nth-child(2)').style.background = '#fff3e0';
+    } else if (tipo === 'por-caducar') {
+        document.querySelector('.stat-card:nth-child(3)').style.background = '#ffebee';
+    }
+    mostrarProductos();
+}
+
+// Aplicar todos los filtros desde el panel
+function aplicarFiltrosDesdePanel() {
+    filtroActivo.categoria = document.getElementById('filtroCategoria').value;
+    filtroActivo.ubicacion = document.getElementById('filtroUbicacion').value;
+    // Mantener el tipo actual (no lo cambiamos desde aquí)
+    mostrarProductos();
+    mostrarNotificacion('Filtros aplicados', 'success');
+}
+
+// Limpiar todos los filtros
+function limpiarFiltros() {
+    filtroActivo = {
+        tipo: 'todos',
+        categoria: 'todas',
+        ubicacion: 'todas'
+    };
+    // Resetear selects
+    document.getElementById('filtroCategoria').value = 'todas';
+    document.getElementById('filtroUbicacion').value = 'todas';
+    // Resetear estilo de estadísticas
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.style.background = '';
+    });
+    // Limpiar buscador
+    if (buscador) buscador.value = '';
+    mostrarProductos();
+    mostrarNotificacion('Filtros limpiados', 'info');
+}  
 
 // Consumir rápido (-1)
 async function consumirProductoRapido(codigo) {
@@ -880,6 +956,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ============================================
     // SISTEMA DE PESTAÑAS
     // ============================================
+
+        // Eventos de filtros
+    document.querySelectorAll('.stat-card[data-filtro="stock-bajo"]')?.forEach(el => {
+        el.addEventListener('click', () => aplicarFiltroPorTipo('stock-bajo'));
+    });
+    document.querySelectorAll('.stat-card[data-filtro="por-caducar"]')?.forEach(el => {
+        el.addEventListener('click', () => aplicarFiltroPorTipo('por-caducar'));
+    });
+    
+    // Toggle de filtros avanzados
+    const btnToggle = document.getElementById('btnToggleFiltros');
+    const filtrosBody = document.getElementById('filtrosBody');
+    const toggleIcon = document.querySelector('.filtros-toggle-icon');
+    if (btnToggle) {
+        btnToggle.addEventListener('click', () => {
+            const isVisible = filtrosBody.style.display === 'block';
+            filtrosBody.style.display = isVisible ? 'none' : 'block';
+            if (toggleIcon) toggleIcon.classList.toggle('rotated');
+        });
+    }
+    
+    // Botones de filtros
+    document.getElementById('btnAplicarFiltros')?.addEventListener('click', aplicarFiltrosDesdePanel);
+    document.getElementById('btnLimpiarFiltros')?.addEventListener('click', limpiarFiltros);
     
     function initTabs() {
         const tabs = document.querySelectorAll('.tab-btn');
