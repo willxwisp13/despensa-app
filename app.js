@@ -649,9 +649,33 @@ function mostrarCargando(mostrar) {
     }
 }
 
+// Buscar producto en múltiples fuentes
+async function buscarEnMultiplesFuentes(codigo) {
+    // Fuente 1: Open Food Facts
+    mostrarCargando(true, 'Buscando en Open Food Facts...');
+    const offResult = await buscarEnOpenFoodFacts(codigo);
+    if (offResult.encontrado) {
+        mostrarCargando(false);
+        mostrarNotificacion('✅ Producto encontrado en Open Food Facts', 'success');
+        return offResult;
+    }
+    
+    // Fuente 2: Product Open Data
+    mostrarCargando(true, 'Buscando en Product Open Data...');
+    const podResult = await buscarEnProductOpenData(codigo);
+    if (podResult.encontrado) {
+        mostrarCargando(false);
+        mostrarNotificacion('✅ Producto encontrado en Product Open Data', 'success');
+        return podResult;
+    }
+    
+    mostrarCargando(false);
+    return { encontrado: false, codigo_barras: codigo };
+}
+
+// Buscar en Open Food Facts
 async function buscarEnOpenFoodFacts(codigo) {
     try {
-        mostrarCargando(true);
         const respuesta = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
         const datos = await respuesta.json();
         
@@ -669,9 +693,35 @@ async function buscarEnOpenFoodFacts(codigo) {
         }
         return { encontrado: false, codigo_barras: codigo };
     } catch (error) {
+        console.error('Error en Open Food Facts:', error);
         return { encontrado: false, codigo_barras: codigo, error: true };
-    } finally {
-        mostrarCargando(false);
+    }
+}
+
+// Buscar en Product Open Data
+async function buscarEnProductOpenData(codigo) {
+    try {
+        // Product Open Data API (gratuita, sin API key)
+        const respuesta = await fetch(`https://product-open-data.com/api/v1/product/${codigo}`);
+        
+        if (respuesta.ok) {
+            const datos = await respuesta.json();
+            if (datos && datos.name) {
+                return {
+                    encontrado: true,
+                    nombre: datos.name || "Producto sin nombre",
+                    marca: datos.brand || "",
+                    categoria: datos.category || "Otros",
+                    cantidad: datos.quantity || "",
+                    imagen: datos.image_url || "",
+                    codigo_barras: codigo
+                };
+            }
+        }
+        return { encontrado: false, codigo_barras: codigo };
+    } catch (error) {
+        console.error('Error en Product Open Data:', error);
+        return { encontrado: false, codigo_barras: codigo, error: true };
     }
 }
 
