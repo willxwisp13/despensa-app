@@ -9,7 +9,7 @@ let productosActuales = [];
 let scannerActivo = false;
 let userEmail = null;
 let filtroActivo = {
-    tipo: 'todos', // 'todos', 'stock-bajo', 'por-caducar'
+    tipo: 'todos',
     categoria: 'todas',
     ubicacion: 'todas'
 };
@@ -106,7 +106,6 @@ async function cargarDespensas() {
         despensasUsuario = await apiRequest('despensas');
         
         if (despensasUsuario.length === 0) {
-            // No tiene ninguna despensa: preguntar si crear o unirse
             const opcion = prompt('👋 Bienvenido a la despensa compartida.\n\nNo tienes ninguna despensa todavía.\n\nEscribe "crear" para crear una nueva.\nO escribe "unirse" para unirte a una existente con código de invitación.');
             
             if (opcion === 'crear') {
@@ -114,17 +113,17 @@ async function cargarDespensas() {
                 if (nombre && nombre.trim()) {
                     await crearDespensa(nombre.trim());
                 } else {
-                    cargarDespensas(); // Reintentar
+                    cargarDespensas();
                 }
             } else if (opcion === 'unirse') {
                 const codigo = prompt('🔗 Introduce el código de invitación:');
                 if (codigo && codigo.trim()) {
                     await unirseADespensa(codigo.trim().toUpperCase());
                 } else {
-                    cargarDespensas(); // Reintentar
+                    cargarDespensas();
                 }
             } else {
-                cargarDespensas(); // Reintentar
+                cargarDespensas();
             }
         } else if (despensasUsuario.length === 1) {
             despensaActual = despensasUsuario[0];
@@ -155,7 +154,6 @@ async function crearDespensa(nombre) {
         despensasUsuario = [nuevaDespensa];
         await cargarProductos();
         
-        // Forzar actualización del header
         const despensaNombreElement = document.getElementById('despensaActivaNombre');
         if (despensaNombreElement) {
             despensaNombreElement.textContent = despensaActual.nombre;
@@ -170,7 +168,6 @@ async function crearDespensa(nombre) {
 }
 
 function mostrarSelectorDespensas() {
-    // Crear un mensaje con la lista de despensas
     let mensaje = '📋 TUS DESPENSAS:\n\n';
     despensasUsuario.forEach((d, i) => {
         mensaje += `${i + 1}. ${d.nombre} ${d.rol === 'admin' ? '👑' : '👤'}\n`;
@@ -209,19 +206,16 @@ function mostrarSelectorDespensas() {
 }
 
 function mostrarPantallaPrincipal() {
-    // Actualizar el nombre de la despensa en el header
     const despensaNombreElement = document.getElementById('despensaActivaNombre');
     if (despensaNombreElement) {
         despensaNombreElement.textContent = despensaActual.nombre;
     }
     
-    // También actualizar el título si existe (por compatibilidad)
     const tituloElement = document.getElementById('tituloDespensa');
     if (tituloElement) {
         tituloElement.textContent = despensaActual.nombre;
     }
     
-    // Actualizar estadísticas
     actualizarEstadisticas();
 }
 
@@ -237,20 +231,18 @@ async function unirseADespensa(codigo) {
         const resultado = await apiRequest('unirse', 'POST', { codigo });
         if (resultado.success) {
             alert(`✅ Te has unido a la despensa correctamente.`);
-            // Recargar las despensas del usuario
             await cargarDespensas();
         }
     } catch (error) {
         console.error('Error al unirse:', error);
         alert('❌ Código inválido, expirado o ya usado.\n\nComprueba que el código es correcto y vuelve a intentarlo.');
-        // Preguntar si quiere intentar de nuevo o volver al selector
         const reintentar = confirm('¿Quieres intentar con otro código?');
         if (reintentar) {
             const nuevoCodigo = prompt('🔗 Introduce el código de invitación:');
             if (nuevoCodigo && nuevoCodigo.trim()) {
                 unirseADespensa(nuevoCodigo.trim().toUpperCase());
             } else {
-                cargarDespensas(); // Volver al selector
+                cargarDespensas();
             }
         } else {
             cargarDespensas();
@@ -259,7 +251,6 @@ async function unirseADespensa(codigo) {
 }
 
 async function generarInvitacion() {
-    // Cualquier miembro de la familia puede invitar
     if (!despensaActual || !despensaActual.id) {
         alert('No hay una despensa activa.');
         return;
@@ -295,7 +286,6 @@ function mostrarProductos() {
     
     let filtrados = [...productosActuales];
     
-    // 1. Filtrar por tipo (stock bajo / por caducar)
     if (filtroActivo.tipo === 'stock-bajo') {
         filtrados = filtrados.filter(p => p.cantidad > 0 && p.cantidad <= 2);
     } else if (filtroActivo.tipo === 'por-caducar') {
@@ -306,17 +296,14 @@ function mostrarProductos() {
         });
     }
     
-    // 2. Filtrar por categoría
     if (filtroActivo.categoria !== 'todas') {
         filtrados = filtrados.filter(p => p.categoria === filtroActivo.categoria);
     }
     
-    // 3. Filtrar por ubicación
     if (filtroActivo.ubicacion !== 'todas') {
         filtrados = filtrados.filter(p => p.ubicacion === filtroActivo.ubicacion);
     }
     
-    // 4. Filtrar por texto de búsqueda
     filtrados = filtrados.filter(p => 
         p.nombre.toLowerCase().includes(textoBusqueda) ||
         p.codigo_barras.includes(textoBusqueda)
@@ -356,7 +343,6 @@ function mostrarProductos() {
         `;
     }).join('');
     
-    // Eventos (igual que antes)
     document.querySelectorAll('.product-info').forEach(el => {
         el.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -391,10 +377,8 @@ function mostrarProductos() {
 // FUNCIONES DE FILTROS
 // ============================================
 
-// Aplicar filtro por tipo (todos / stock bajo / por caducar)
 function aplicarFiltroPorTipo(tipo) {
     filtroActivo.tipo = tipo;
-    // Limpiar selección visual de estadísticas
     document.querySelectorAll('.stat-card').forEach(card => {
         card.style.background = '';
         card.classList.remove('filtro-activo');
@@ -434,7 +418,6 @@ function aplicarFiltroPorTipo(tipo) {
     mostrarProductos();
 }
 
-// Aplicar todos los filtros desde el panel
 function aplicarFiltrosDesdePanel() {
     filtroActivo.categoria = document.getElementById('filtroCategoria').value;
     filtroActivo.ubicacion = document.getElementById('filtroUbicacion').value;
@@ -442,7 +425,6 @@ function aplicarFiltrosDesdePanel() {
     mostrarNotificacion('Filtros aplicados', 'success');
 }
 
-// Limpiar todos los filtros
 function limpiarFiltros() {
     filtroActivo = {
         tipo: 'todos',
@@ -469,7 +451,96 @@ function limpiarFiltros() {
     mostrarNotificacion('Filtros limpiados', 'info');
 }
 
-// Consumir rápido (-1)
+// ============================================
+// NOTIFICACIONES
+// ============================================
+
+function contarNotificaciones() {
+    let total = 0;
+    if (notificaciones.stockBajo) total += notificaciones.stockBajo.length;
+    if (notificaciones.porCaducar) total += notificaciones.porCaducar.length;
+    if (notificaciones.miembrosNuevos) total += notificaciones.miembrosNuevos.length;
+    
+    const badge = document.getElementById('badgeNotificaciones');
+    if (badge) {
+        if (total > 0) {
+            badge.textContent = total > 99 ? '99+' : total;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+    return total;
+}
+
+function actualizarNotificaciones() {
+    if (!productosActuales) return;
+    
+    notificaciones.stockBajo = productosActuales.filter(p => p.cantidad > 0 && p.cantidad <= 2);
+    
+    const hoy = new Date();
+    notificaciones.porCaducar = productosActuales.filter(p => {
+        if (!p.fecha_caducidad) return false;
+        const fechaCad = new Date(p.fecha_caducidad);
+        const dias = (fechaCad - hoy) / (1000 * 60 * 60 * 24);
+        return dias > 0 && dias <= 7;
+    });
+    
+    notificaciones.porCaducar.sort((a, b) => new Date(a.fecha_caducidad) - new Date(b.fecha_caducidad));
+    
+    contarNotificaciones();
+    actualizarPanelNotificaciones();
+}
+
+function mostrarPanelNotificaciones() {
+    const modal = document.getElementById('modalNotificaciones');
+    if (modal) {
+        actualizarPanelNotificaciones();
+        modal.style.display = 'flex';
+    }
+}
+
+function actualizarPanelNotificaciones() {
+    const listaStock = document.getElementById('listaStockBajo');
+    if (listaStock) {
+        if (notificaciones.stockBajo.length === 0) {
+            listaStock.innerHTML = '<div class="notificacion-vacia">✅ Sin productos con stock bajo</div>';
+        } else {
+            listaStock.innerHTML = notificaciones.stockBajo.map(p => `
+                <div class="notificacion-item">
+                    <span class="icono">⚠️</span>
+                    <span class="texto">${escapeHtml(p.nombre)} - quedan ${p.cantidad} ${p.cantidad === 1 ? 'unidad' : 'unidades'}</span>
+                </div>
+            `).join('');
+        }
+    }
+    
+    const listaCaducar = document.getElementById('listaPorCaducar');
+    if (listaCaducar) {
+        if (notificaciones.porCaducar.length === 0) {
+            listaCaducar.innerHTML = '<div class="notificacion-vacia">✅ Sin productos próximos a caducar</div>';
+        } else {
+            listaCaducar.innerHTML = notificaciones.porCaducar.map(p => {
+                const dias = Math.ceil((new Date(p.fecha_caducidad) - new Date()) / (1000 * 60 * 60 * 24));
+                let textoDias = '';
+                if (dias === 1) textoDias = 'caduca mañana';
+                else if (dias === 0) textoDias = 'caduca hoy';
+                else textoDias = `caduca en ${dias} días`;
+                return `
+                    <div class="notificacion-item">
+                        <span class="icono">⏰</span>
+                        <span class="texto">${escapeHtml(p.nombre)} - ${textoDias}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+}
+
+// ============================================
+// FUNCIONES RÁPIDAS
+// ============================================
+
 async function consumirProductoRapido(codigo) {
     const producto = productosActuales.find(p => p.codigo_barras === codigo);
     if (!producto) return;
@@ -485,23 +556,17 @@ async function consumirProductoRapido(codigo) {
             codigo_barras: codigo
         });
         
-        // Actualizar la cantidad localmente para respuesta inmediata
         producto.cantidad--;
-        
-        // Actualizar la UI
         actualizarCantidadEnUI(codigo, producto.cantidad);
         actualizarEstadisticas();
-        
         mostrarNotificacion(`-1 ${producto.nombre}`, 'success');
     } catch (error) {
         console.error('Error:', error);
         mostrarNotificacion('Error al consumir', 'error');
-        // Recargar para sincronizar
         await cargarProductos();
     }
 }
 
-// Agregar rápido (+1)
 async function agregarProductoRapido(codigo) {
     const producto = productosActuales.find(p => p.codigo_barras === codigo);
     if (!producto) return;
@@ -517,23 +582,17 @@ async function agregarProductoRapido(codigo) {
             ubicacion: producto.ubicacion
         });
         
-        // Actualizar la cantidad localmente para respuesta inmediata
         producto.cantidad++;
-        
-        // Actualizar la UI
         actualizarCantidadEnUI(codigo, producto.cantidad);
         actualizarEstadisticas();
-        
         mostrarNotificacion(`+1 ${producto.nombre}`, 'success');
     } catch (error) {
         console.error('Error:', error);
         mostrarNotificacion('Error al agregar', 'error');
-        // Recargar para sincronizar
         await cargarProductos();
     }
 }
 
-// Actualizar la cantidad en la UI sin recargar toda la lista
 function actualizarCantidadEnUI(codigo, nuevaCantidad) {
     const productItem = document.querySelector(`.product-item[data-codigo="${codigo}"]`);
     if (productItem) {
@@ -542,11 +601,9 @@ function actualizarCantidadEnUI(codigo, nuevaCantidad) {
             cantidadDiv.textContent = nuevaCantidad;
         }
         
-        // Actualizar clase de stock
         const stockClass = nuevaCantidad <= 2 ? (nuevaCantidad === 0 ? 'product-critico' : 'product-bajo-stock') : '';
         productItem.className = `product-item ${stockClass}`;
         
-        // Habilitar/deshabilitar botón restar
         const decrementBtn = productItem.querySelector('.btn-decrement');
         if (decrementBtn) {
             if (nuevaCantidad === 0) {
@@ -558,11 +615,13 @@ function actualizarCantidadEnUI(codigo, nuevaCantidad) {
     }
 }
 
-// Sistema de notificaciones toast
+// ============================================
+// SISTEMA DE NOTIFICACIONES TOAST
+// ============================================
+
 let toastTimeout = null;
 
 function mostrarNotificacion(mensaje, tipo = 'info') {
-    // Eliminar toast existente
     const toastExistente = document.querySelector('.toast-notification');
     if (toastExistente) {
         toastExistente.remove();
@@ -571,7 +630,6 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         clearTimeout(toastTimeout);
     }
     
-    // Crear nuevo toast
     const toast = document.createElement('div');
     toast.className = `toast-notification toast-${tipo}`;
     
@@ -583,12 +641,10 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
     toast.innerHTML = `${icono} ${mensaje}`;
     document.body.appendChild(toast);
     
-    // Mostrar con animación
     setTimeout(() => {
         toast.classList.add('show');
     }, 10);
     
-    // Ocultar después de 2 segundos
     toastTimeout = setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => {
@@ -619,12 +675,14 @@ function actualizarEstadisticas() {
     actualizarNotificaciones();
 }
 
+// ============================================
+// ACCIONES DE PRODUCTO
+// ============================================
+
 function mostrarAccionesProducto(producto) {
     const accionesNombre = document.getElementById('accionesProductoNombre');
     if (accionesNombre) accionesNombre.textContent = producto.nombre;
     modalAcciones.style.display = 'flex';
-    
-    // Guardar producto seleccionado para las acciones
     window.productoSeleccionado = producto;
 }
 
@@ -709,10 +767,8 @@ function editarProducto() {
 // ============================================
 
 function iniciarScanner() {
-    // Mostrar modal
     modalScanner.style.display = 'flex';
     
-    // Obtener el elemento video
     const videoElement = document.querySelector('#video');
     if (!videoElement) {
         console.error('❌ No se encontró el elemento #video');
@@ -721,13 +777,11 @@ function iniciarScanner() {
         return;
     }
     
-    // Detener Quagga si ya está activo
     if (scannerActivo) {
         Quagga.stop();
         scannerActivo = false;
     }
     
-    // 1. PRIMERO: Obtener el stream de la cámara manualmente
     navigator.mediaDevices.getUserMedia({ 
         video: { 
             facingMode: "environment",
@@ -737,12 +791,9 @@ function iniciarScanner() {
     })
     .then(stream => {
         console.log('✅ Stream de cámara obtenido manualmente');
-        
-        // Asignar el stream al elemento video para que se vea
         videoElement.srcObject = stream;
         videoElement.play();
         
-        // 2. SEGUNDO: Inicializar Quagga usando el mismo stream (configuración mejorada)
         Quagga.init({
             inputStream: {
                 name: "Live",
@@ -753,16 +804,16 @@ function iniciarScanner() {
                 }
             },
             locator: {
-                patchSize: "x-large",      // Mayor precisión
+                patchSize: "x-large",
                 halfSample: false,
-                locate: true               // Buscar códigos en toda la imagen
+                locate: true
             },
             decoder: {
                 readers: ["ean_reader", "ean_8_reader", "code_128_reader"]
             },
             locate: true,
-            numOfWorkers: 2,               // Mejor rendimiento
-            frequency: 10                  // Escanea más frecuentemente
+            numOfWorkers: 2,
+            frequency: 10
         }, function(err) {
             if (err) {
                 console.error('Quagga error:', err);
@@ -775,7 +826,6 @@ function iniciarScanner() {
             scannerActivo = true;
         });
         
-        // 3. Detectar códigos
         Quagga.onDetected(function(result) {
             if (result && result.codeResult) {
                 const codigo = result.codeResult.code;
@@ -784,7 +834,6 @@ function iniciarScanner() {
                 Quagga.stop();
                 scannerActivo = false;
                 
-                // Limpiar el stream de la cámara
                 if (videoElement.srcObject) {
                     videoElement.srcObject.getTracks().forEach(track => track.stop());
                     videoElement.srcObject = null;
@@ -818,7 +867,6 @@ function mostrarCargando(mostrar, mensaje = '🔍 Buscando producto...') {
         loader.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:20px; border-radius:10px; z-index:9999; box-shadow:0 2px 10px rgba(0,0,0,0.2);';
         document.body.appendChild(loader);
     } else if (mostrar && loader) {
-        // Actualizar mensaje si ya existe
         const loaderDiv = loader.querySelector('.loader');
         if (loaderDiv) loaderDiv.innerHTML = mensaje;
     } else if (!mostrar && loader) {
@@ -826,9 +874,7 @@ function mostrarCargando(mostrar, mensaje = '🔍 Buscando producto...') {
     }
 }
 
-// Buscar producto en múltiples fuentes
 async function buscarEnMultiplesFuentes(codigo) {
-    // Fuente 1: Open Food Facts
     mostrarCargando(true, 'Buscando en Open Food Facts...');
     const offResult = await buscarEnOpenFoodFacts(codigo);
     if (offResult.encontrado) {
@@ -837,7 +883,6 @@ async function buscarEnMultiplesFuentes(codigo) {
         return offResult;
     }
     
-    // Fuente 2: Product Open Data
     mostrarCargando(true, 'Buscando en Product Open Data...');
     const podResult = await buscarEnProductOpenData(codigo);
     if (podResult.encontrado) {
@@ -850,7 +895,6 @@ async function buscarEnMultiplesFuentes(codigo) {
     return { encontrado: false, codigo_barras: codigo };
 }
 
-// Buscar en Open Food Facts
 async function buscarEnOpenFoodFacts(codigo) {
     try {
         const respuesta = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
@@ -875,10 +919,8 @@ async function buscarEnOpenFoodFacts(codigo) {
     }
 }
 
-// Buscar en Product Open Data
 async function buscarEnProductOpenData(codigo) {
     try {
-        // Product Open Data API (gratuita, sin API key)
         const respuesta = await fetch(`https://product-open-data.com/api/v1/product/${codigo}`);
         
         if (respuesta.ok) {
@@ -916,10 +958,7 @@ function extraerCategoria(tags) {
 }
 
 async function procesarCodigo(codigo) {
-    // Buscar en múltiples fuentes
     const infoProducto = await buscarEnMultiplesFuentes(codigo);
-    
-    // Verificar si ya existe en la despensa
     const productoExistente = productosActuales.find(p => p.codigo_barras === codigo);
     
     if (productoExistente) {
@@ -939,7 +978,6 @@ async function procesarCodigo(codigo) {
         return;
     }
     
-    // Producto nuevo
     if (infoProducto.encontrado) {
         document.getElementById('codigoBarras').value = infoProducto.codigo_barras;
         document.getElementById('nombre').value = infoProducto.nombre;
@@ -992,88 +1030,18 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-    // Contar notificaciones activas
-function contarNotificaciones() {
-    let total = 0;
-    if (notificaciones.stockBajo) total += notificaciones.stockBajo.length;
-    if (notificaciones.porCaducar) total += notificaciones.porCaducar.length;
-    if (notificaciones.miembrosNuevos) total += notificaciones.miembrosNuevos.length;
-    
-    const badge = document.getElementById('badgeNotificaciones');
-    if (badge) {
-        if (total > 0) {
-            badge.textContent = total > 99 ? '99+' : total;
-            badge.style.display = 'flex';
-        } else {
-            badge.style.display = 'none';
-        }
-    }
-    return total;
-}
-
-    // Actualizar lista de notificaciones
-function actualizarNotificaciones() {
-    // Stock bajo
-    notificaciones.stockBajo = productosActuales.filter(p => p.cantidad > 0 && p.cantidad <= 2);
-    
-    // Por caducar (próximos 7 días)
-    const hoy = new Date();
-    notificaciones.porCaducar = productosActuales.filter(p => {
-        if (!p.fecha_caducidad) return false;
-        const fechaCad = new Date(p.fecha_caducidad);
-        const dias = (fechaCad - hoy) / (1000 * 60 * 60 * 24);
-        return dias > 0 && dias <= 7;
-    });
-    
-    // Ordenar por fecha de caducidad (los más próximos primero)
-    notificaciones.porCaducar.sort((a, b) => new Date(a.fecha_caducidad) - new Date(b.fecha_caducidad));
-    
-    // Miembros nuevos (por ahora vacío, se puede implementar después)
-    
-    contarNotificaciones();
-    actualizarPanelNotificaciones();
-}
-
-    // Mostrar panel de notificaciones
-function mostrarPanelNotificaciones() {
-    const modal = document.getElementById('modalNotificaciones');
-    if (modal) {
-        actualizarPanelNotificaciones();
-        modal.style.display = 'flex';
-    }
-}
-
-// Actualizar contenido del panel
-function actualizarPanelNotificaciones() {
-    // Stock bajo
-    const listaStock = document.getElementById('listaStockBajo');
-    if (listaStock) {
-        if (notificaciones.stockBajo.length === 0) {
-            listaStock.innerHTML = '<div class="notificacion-vacia">✅ Sin productos con stock bajo</div>';
-        } else {
-            listaStock.innerHTML = notificaciones.stockBajo.map(p => `
-                <div class="notificacion-item">
-                    <span class="icono">⚠️</span>
-                    <span class="texto">${escapeHtml(p.nombre)} - quedan ${p.cantidad} ${p.cantidad === 1 ? 'unidad' : 'unidades'}</span>
-                </div>
-            `).join('');
-        }
-    }
-
 // ============================================
 // EVENTOS E INICIALIZACIÓN
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // ============================================
-    // SISTEMA DE PESTAÑAS
-    // ============================================
-        // Botón de notificaciones
+    // Botón de notificaciones
     document.getElementById('btnNotificaciones')?.addEventListener('click', mostrarPanelNotificaciones);
     document.getElementById('closeNotificaciones')?.addEventListener('click', () => {
         document.getElementById('modalNotificaciones').style.display = 'none';
     });
-    // Eventos de filtros por tipo 
+    
+    // Eventos de filtros por tipo
     document.querySelectorAll('.stat-card[data-filtro="todos"]')?.forEach(el => {
         el.addEventListener('click', () => aplicarFiltroPorTipo('todos'));
     });
@@ -1095,33 +1063,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (toggleIcon) toggleIcon.classList.toggle('rotated');
         });
     }
-
-
-    // Próximos a caducar
-    const listaCaducar = document.getElementById('listaPorCaducar');
-    if (listaCaducar) {
-        if (notificaciones.porCaducar.length === 0) {
-            listaCaducar.innerHTML = '<div class="notificacion-vacia">✅ Sin productos próximos a caducar</div>';
-        } else {
-            listaCaducar.innerHTML = notificaciones.porCaducar.map(p => {
-                const dias = Math.ceil((new Date(p.fecha_caducidad) - new Date()) / (1000 * 60 * 60 * 24));
-                let textoDias = '';
-                if (dias === 1) textoDias = 'caduca mañana';
-                else if (dias === 0) textoDias = 'caduca hoy';
-                else textoDias = `caduca en ${dias} días`;
-                return `
-                    <div class="notificacion-item">
-                        <span class="icono">⏰</span>
-                        <span class="texto">${escapeHtml(p.nombre)} - ${textoDias}</span>
-                    </div>
-                `;
-            }).join('');
-        }
-    }
-}
-
-    
-
     
     // Botones de filtros
     document.getElementById('btnAplicarFiltros')?.addEventListener('click', aplicarFiltrosDesdePanel);
@@ -1196,7 +1137,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     async function actualizarPerfil() {
-        // Información del usuario
         const emailElement = document.getElementById('perfilEmail');
         const nombreElement = document.getElementById('perfilNombre');
         const rolElement = document.getElementById('perfilRol');
@@ -1215,7 +1155,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             rolElement.textContent = despensaActual.rol === 'admin' ? '👑 Administrador' : '👤 Miembro';
         }
         
-        // Información de la despensa activa
         const despensaNombreElement = document.getElementById('perfilDespensaNombre');
         const despensaRolElement = document.getElementById('perfilDespensaRol');
         
@@ -1227,18 +1166,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             despensaRolElement.textContent = despensaActual.rol === 'admin' ? 'Administrador' : 'Miembro';
         }
         
-        // Mostrar sección de miembros para todos los miembros
         const seccionMiembros = document.getElementById('seccionMiembros');
         if (seccionMiembros && despensaActual) {
             seccionMiembros.style.display = 'block';
             await cargarMiembrosDespensa();
         }
         
-        // Cargar código de invitación actual
         await cargarCodigoInvitacion();
     }
     
-    // Cargar miembros de la despensa 
     async function cargarMiembrosDespensa() {
         if (!despensaActual) return;
         
@@ -1267,15 +1203,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
-    // Cargar código de invitación actual
     async function cargarCodigoInvitacion() {
         const codigoElement = document.getElementById('perfilCodigoInvitacion');
         if (!codigoElement || !despensaActual) return;
-        
         codigoElement.textContent = 'No generado';
     }
     
-    // Generar nuevo código de invitación desde el perfil
     async function generarCodigoDesdePerfil() {
         if (!despensaActual) {
             mostrarNotificacion('No hay despensa activa', 'error');
@@ -1289,7 +1222,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 codigoElement.textContent = resultado.codigo;
             }
             mostrarNotificacion(`Código: ${resultado.codigo}`, 'success');
-            
             await navigator.clipboard.writeText(resultado.codigo);
             mostrarNotificacion('📋 Código copiado al portapapeles', 'success');
         } catch (error) {
@@ -1317,16 +1249,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         exportarDatos();
     });
     
-       document.getElementById('btnCerrarSesion')?.addEventListener('click', () => {
+    document.getElementById('btnCerrarSesion')?.addEventListener('click', () => {
         if (confirm('¿Cerrar sesión? Deberás autenticarte de nuevo.')) {
             window.location.href = '/cdn-cgi/access/logout';
         }
     });
 
-    // Botón generar código desde perfil
     document.getElementById('btnGenerarCodigoPerfil')?.addEventListener('click', generarCodigoDesdePerfil);
     
-    // Botón editar nombre
     document.getElementById('btnEditarNombre')?.addEventListener('click', async () => {
         const nuevoNombre = prompt('Introduce tu nombre de usuario (visible para los miembros de la despensa):', 
             despensaActual?.nombre_usuario || '');
@@ -1369,11 +1299,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
-    // Inicializar pestañas
     initTabs();
     actualizarNombreDespensaActiva();
     
-    // Configurar eventos
     if (btnModoEscaneo) btnModoEscaneo.addEventListener('click', iniciarScanner);
     
     const closeScanner = document.getElementById('closeScanner');
@@ -1387,7 +1315,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formProducto = document.getElementById('formProducto');
     if (formProducto) formProducto.addEventListener('submit', guardarProductoFormulario);
     
-    // Botones de acciones
     document.getElementById('btnConsumir')?.addEventListener('click', consumirProducto);
     document.getElementById('btnAgregar')?.addEventListener('click', agregarProducto);
     document.getElementById('btnEditar')?.addEventListener('click', editarProducto);
@@ -1395,7 +1322,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnCerrarAcciones')?.addEventListener('click', () => modalAcciones.style.display = 'none');
     document.getElementById('btnCancelarProducto')?.addEventListener('click', () => modalProducto.style.display = 'none');
     
-    // Escaneo manual
     document.getElementById('btnEscanearManual')?.addEventListener('click', () => {
         detenerScanner();
         modalScanner.style.display = 'none';
@@ -1412,11 +1338,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     document.getElementById('btnCancelarManual')?.addEventListener('click', () => modalManual.style.display = 'none');
     
-    // Botón invitar
     const btnInvitar = document.getElementById('btnInvitar');
     if (btnInvitar) btnInvitar.addEventListener('click', generarInvitacion);
 
-    // Botón unirse
     const btnUnirse = document.getElementById('btnUnirse');
     if (btnUnirse) btnUnirse.addEventListener('click', () => {
         const codigo = prompt('🔗 Introduce el código de invitación:');
@@ -1425,7 +1349,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
-    // Cerrar modales al hacer clic fuera
     window.addEventListener('click', (e) => {
         if (e.target === modalScanner) {
             detenerScanner();
@@ -1436,6 +1359,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.target === modalAcciones) modalAcciones.style.display = 'none';
     });
     
-    // Inicializar
     await cargarDespensas();
 });
