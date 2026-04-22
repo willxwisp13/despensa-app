@@ -235,10 +235,11 @@ body {
   font-size: 1.2rem;
 }
 
+/* Contenedor del escáner - ocupa el espacio disponible pero deja espacio para el botón */
 .scanner-container {
     position: relative;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 70px); /* Resta espacio para el footer */
     background: #000;
     overflow: hidden;
 }
@@ -252,45 +253,74 @@ body {
     object-fit: cover;
 }
 
-/* Estilos de depuración (opcional, para probar) */
-#video {
-  border: 2px solid red;
-}
-
-.scanner-container {
-  border: 2px solid blue;
-}
-
+/* Overlay oscuro fuera del recuadro */
 .scan-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
 }
 
+/* Recuadro de escaneo - más pequeño para no interferir con el botón */
 .scan-frame {
-  width: 80%;
-  height: 200px;
-  border: 2px solid #4caf50;
-  border-radius: 10px;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
-  animation: scan 2s linear infinite;
+    width: 70%;
+    max-width: 260px;
+    height: 180px;
+    border: 3px solid #4caf50;
+    border-radius: 12px;
+    background: transparent;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+    animation: scan 2s linear infinite;
+    position: relative;
+}
+
+/* Footer del escáner (siempre visible) */
+.scanner-footer {
+    background: #1a1a1a;
+    padding: 12px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 10;
+}
+
+/* Línea de escaneo animada dentro del recuadro */
+.scan-frame::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #4caf50;
+    animation: scan-line 2s linear infinite;
+    border-radius: 2px;
+    box-shadow: 0 0 5px #4caf50;
+}
+
+@keyframes scan-line {
+    0% { top: 0; }
+    50% { top: calc(100% - 3px); }
+    100% { top: 0; }
 }
 
 @keyframes scan {
-  0% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.5), 0 0 0 2px #4caf50; }
-  50% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.3), 0 0 0 2px #ffeb3b; }
-  100% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.5), 0 0 0 2px #4caf50; }
-}
-
-.scanner-footer {
-  background: #1a1a1a;
-  padding: 15px;
+    0% {
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+    }
+    50% {
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+    }
 }
 
 /* Forms */
