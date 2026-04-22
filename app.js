@@ -591,15 +591,24 @@ function editarProducto() {
 function iniciarScanner() {
     modalScanner.style.display = 'flex';
     
+    // Asegurar que el elemento video está visible y tiene tamaño
+    const videoElement = document.querySelector('#video');
+    if (videoElement) {
+        videoElement.style.width = '100%';
+        videoElement.style.height = '100%';
+        videoElement.style.objectFit = 'cover';
+    }
+    
     Quagga.init({
         inputStream: {
             name: "Live",
             type: "LiveStream",
-            target: document.querySelector('#video'),
+            target: document.querySelector('#video'), // Asegurar que este ID existe
             constraints: {
                 facingMode: "environment",
                 width: { ideal: 1280 },
-                height: { ideal: 720 }
+                height: { ideal: 720 },
+                aspectRatio: { ideal: 1.7777777778 } // 16:9
             }
         },
         locator: {
@@ -608,14 +617,26 @@ function iniciarScanner() {
         },
         decoder: {
             readers: ["ean_reader", "ean_8_reader", "code_128_reader", "code_39_reader", "upc_reader", "upc_e_reader"]
-        }
+        },
+        numOfWorkers: 0 // A veces ayuda en móviles
     }, (err) => {
         if (err) {
-            alert('Error al iniciar la cámara');
+            console.error('Error Quagga:', err);
+            alert('Error al iniciar la cámara: ' + (err.message || 'desconocido'));
             return;
         }
         Quagga.start();
         scannerActivo = true;
+        
+        // Intentar ajustar zoom si es necesario (opcional)
+        setTimeout(() => {
+            try {
+                const track = Quagga.CameraAccess.getActiveTrack();
+                if (track && track.applyConstraints) {
+                    track.applyConstraints({ advanced: [{ zoom: 1 }] });
+                }
+            } catch(e) { console.log('Zoom no soportado'); }
+        }, 500);
     });
     
     Quagga.onDetected((result) => {
