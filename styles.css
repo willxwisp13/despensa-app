@@ -1174,3 +1174,9 @@ hr {
 .btn-filtro-limpiar:active {
     transform: scale(0.97);
 }
+
+/* Indicador de filtro activo en estadísticas */
+.stat-card.filtro-activo {
+    background: #e8f0fe;
+    transform: scale(1.02);
+}
