@@ -592,66 +592,86 @@ function iniciarScanner() {
     // Mostrar modal
     modalScanner.style.display = 'flex';
     
-    // Detener Quagga si ya está activo
-    if (scannerActivo) {
-        Quagga.stop();
-        scannerActivo = false;
-    }
-    
-    // Configurar Quagga - usando 'environment' directamente
-    Quagga.init({
-        inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            constraints: {
-                facingMode: "environment",
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            }
-        },
-        locator: {
-            patchSize: "medium",
-            halfSample: true
-        },
-        decoder: {
-            readers: ["ean_reader", "ean_8_reader", "code_128_reader"]
-        },
-        locate: true,
-        numOfWorkers: 0
-    }, function(err) {
-        if (err) {
-            console.error('Quagga error:', err);
-            alert('Error al iniciar la cámara: ' + (err.message || 'desconocido'));
+    // Forzar un pequeño retraso para asegurar que el modal y el video están en el DOM
+    setTimeout(() => {
+        // Obtener el elemento video
+        const videoElement = document.querySelector('#video');
+        if (!videoElement) {
+            console.error('❌ No se encontró el elemento #video');
+            alert('Error: No se encontró la cámara');
             modalScanner.style.display = 'none';
             return;
         }
         
-        console.log('Quagga iniciado correctamente');
-        Quagga.start();
-        scannerActivo = true;
+        console.log('✅ Elemento video encontrado:', videoElement);
         
-        // Opcional: intentar asignar el video manualmente después de un momento
-        setTimeout(() => {
-            const videoElement = document.querySelector('#video');
-            if (videoElement && videoElement.srcObject) {
-                console.log('✅ Stream de cámara asignado correctamente');
-            } else {
-                console.log('⚠️ Stream de cámara no disponible, pero puede funcionar igual');
-            }
-        }, 500);
-    });
-    
-    Quagga.onDetected(function(result) {
-        if (result && result.codeResult) {
-            const codigo = result.codeResult.code;
-            console.log('Código detectado:', codigo);
-            
+        // Asegurar que el video está visible
+        videoElement.style.display = 'block';
+        videoElement.style.width = '100%';
+        videoElement.style.height = '100%';
+        videoElement.style.objectFit = 'cover';
+        
+        // Detener Quagga si ya está activo
+        if (scannerActivo) {
             Quagga.stop();
             scannerActivo = false;
-            modalScanner.style.display = 'none';
-            procesarCodigo(codigo);
         }
-    });
+        
+        // Configurar Quagga
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: videoElement,  // Usar el elemento directamente
+                constraints: {
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            },
+            locator: {
+                patchSize: "medium",
+                halfSample: true
+            },
+            decoder: {
+                readers: ["ean_reader", "ean_8_reader", "code_128_reader"]
+            },
+            locate: true,
+            numOfWorkers: 0
+        }, function(err) {
+            if (err) {
+                console.error('Quagga error:', err);
+                alert('Error al iniciar la cámara: ' + (err.message || 'desconocido'));
+                modalScanner.style.display = 'none';
+                return;
+            }
+            
+            console.log('Quagga iniciado correctamente');
+            Quagga.start();
+            scannerActivo = true;
+            
+            // Verificar si el stream se asignó correctamente
+            setTimeout(() => {
+                if (videoElement.srcObject) {
+                    console.log('✅ Stream de cámara asignado correctamente');
+                } else {
+                    console.log('⚠️ Advertencia: No se detectó stream de cámara');
+                }
+            }, 500);
+        });
+        
+        Quagga.onDetected(function(result) {
+            if (result && result.codeResult) {
+                const codigo = result.codeResult.code;
+                console.log('Código detectado:', codigo);
+                
+                Quagga.stop();
+                scannerActivo = false;
+                modalScanner.style.display = 'none';
+                procesarCodigo(codigo);
+            }
+        });
+    }, 100); // Pequeño retraso para asegurar que el DOM está listo
 }
 
 function detenerScanner() {
