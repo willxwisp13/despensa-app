@@ -615,6 +615,8 @@ function actualizarEstadisticas() {
     if (totalElement) totalElement.textContent = total;
     if (stockElement) stockElement.textContent = stockBajo;
     if (caducarElement) caducarElement.textContent = porCaducar;
+
+    actualizarNotificaciones();
 }
 
 function mostrarAccionesProducto(producto) {
@@ -990,38 +992,6 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// ============================================
-// EVENTOS E INICIALIZACIÓN
-// ============================================
-
-document.addEventListener('DOMContentLoaded', async () => {
-    // ============================================
-    // SISTEMA DE PESTAÑAS
-    // ============================================
-
-    // Eventos de filtros por tipo 
-    document.querySelectorAll('.stat-card[data-filtro="todos"]')?.forEach(el => {
-        el.addEventListener('click', () => aplicarFiltroPorTipo('todos'));
-    });
-    document.querySelectorAll('.stat-card[data-filtro="stock-bajo"]')?.forEach(el => {
-        el.addEventListener('click', () => aplicarFiltroPorTipo('stock-bajo'));
-    });
-    document.querySelectorAll('.stat-card[data-filtro="por-caducar"]')?.forEach(el => {
-        el.addEventListener('click', () => aplicarFiltroPorTipo('por-caducar'));
-    });
-    
-    // Toggle de filtros avanzados
-    const btnToggle = document.getElementById('btnToggleFiltros');
-    const filtrosBody = document.getElementById('filtrosBody');
-    const toggleIcon = document.querySelector('.filtros-toggle-icon');
-    if (btnToggle) {
-        btnToggle.addEventListener('click', () => {
-            const isVisible = filtrosBody.style.display === 'block';
-            filtrosBody.style.display = isVisible ? 'none' : 'block';
-            if (toggleIcon) toggleIcon.classList.toggle('rotated');
-        });
-    }
-
     // Contar notificaciones activas
 function contarNotificaciones() {
     let total = 0;
@@ -1089,7 +1059,44 @@ function actualizarPanelNotificaciones() {
             `).join('');
         }
     }
+
+// ============================================
+// EVENTOS E INICIALIZACIÓN
+// ============================================
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // ============================================
+    // SISTEMA DE PESTAÑAS
+    // ============================================
+        // Botón de notificaciones
+    document.getElementById('btnNotificaciones')?.addEventListener('click', mostrarPanelNotificaciones);
+    document.getElementById('closeNotificaciones')?.addEventListener('click', () => {
+        document.getElementById('modalNotificaciones').style.display = 'none';
+    });
+    // Eventos de filtros por tipo 
+    document.querySelectorAll('.stat-card[data-filtro="todos"]')?.forEach(el => {
+        el.addEventListener('click', () => aplicarFiltroPorTipo('todos'));
+    });
+    document.querySelectorAll('.stat-card[data-filtro="stock-bajo"]')?.forEach(el => {
+        el.addEventListener('click', () => aplicarFiltroPorTipo('stock-bajo'));
+    });
+    document.querySelectorAll('.stat-card[data-filtro="por-caducar"]')?.forEach(el => {
+        el.addEventListener('click', () => aplicarFiltroPorTipo('por-caducar'));
+    });
     
+    // Toggle de filtros avanzados
+    const btnToggle = document.getElementById('btnToggleFiltros');
+    const filtrosBody = document.getElementById('filtrosBody');
+    const toggleIcon = document.querySelector('.filtros-toggle-icon');
+    if (btnToggle) {
+        btnToggle.addEventListener('click', () => {
+            const isVisible = filtrosBody.style.display === 'block';
+            filtrosBody.style.display = isVisible ? 'none' : 'block';
+            if (toggleIcon) toggleIcon.classList.toggle('rotated');
+        });
+    }
+
+
     // Próximos a caducar
     const listaCaducar = document.getElementById('listaPorCaducar');
     if (listaCaducar) {
