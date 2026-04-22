@@ -1065,3 +1065,112 @@ hr {
     color: #333;
     flex: 1;
 }
+
+/* ============================================
+   FILTROS AVANZADOS
+   ============================================ */
+
+/* Tarjetas de estadísticas clickeables */
+.stat-clickable {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.stat-clickable:active {
+    transform: scale(0.95);
+    background: #f0f0ff;
+}
+
+/* Contenedor de filtros */
+.filtros-container {
+    background: white;
+    border-radius: 12px;
+    margin: 10px 15px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.filtros-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: #f8f8f8;
+    cursor: pointer;
+    font-weight: 500;
+    color: #555;
+    transition: background 0.2s;
+}
+
+.filtros-header:active {
+    background: #efefef;
+}
+
+.filtros-toggle-icon {
+    transition: transform 0.3s;
+}
+
+.filtros-toggle-icon.rotated {
+    transform: rotate(180deg);
+}
+
+.filtros-body {
+    padding: 15px;
+    border-top: 1px solid #eee;
+}
+
+.filtro-grupo {
+    margin-bottom: 15px;
+}
+
+.filtro-grupo label {
+    display: block;
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.filtro-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+}
+
+.filtros-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-filtro-aplicar {
+    flex: 2;
+    padding: 10px;
+    border: none;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-filtro-limpiar {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 25px;
+    background: #f0f0f0;
+    color: #555;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-filtro-aplicar:active,
+.btn-filtro-limpiar:active {
+    transform: scale(0.97);
+}
