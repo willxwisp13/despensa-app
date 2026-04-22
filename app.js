@@ -383,6 +383,88 @@ function mostrarProductos() {
     });
 }
 
+// ============================================
+// FUNCIONES DE FILTROS
+// ============================================
+
+// Aplicar filtro por tipo (todos / stock bajo / por caducar)
+function aplicarFiltroPorTipo(tipo) {
+    filtroActivo.tipo = tipo;
+    // Limpiar selección visual de estadísticas
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.style.background = '';
+        card.classList.remove('filtro-activo');
+    });
+    
+    if (tipo === 'todos') {
+        filtroActivo.categoria = 'todas';
+        filtroActivo.ubicacion = 'todas';
+        if (document.getElementById('filtroCategoria')) {
+            document.getElementById('filtroCategoria').value = 'todas';
+        }
+        if (document.getElementById('filtroUbicacion')) {
+            document.getElementById('filtroUbicacion').value = 'todas';
+        }
+        const primeraTarjeta = document.querySelector('.stat-card:first-child');
+        if (primeraTarjeta) {
+            primeraTarjeta.style.background = '#e8f0fe';
+            primeraTarjeta.classList.add('filtro-activo');
+        }
+        mostrarNotificacion('Mostrando todos los productos', 'info');
+    } else if (tipo === 'stock-bajo') {
+        const segundaTarjeta = document.querySelector('.stat-card:nth-child(2)');
+        if (segundaTarjeta) {
+            segundaTarjeta.style.background = '#fff3e0';
+            segundaTarjeta.classList.add('filtro-activo');
+        }
+        mostrarNotificacion('Mostrando productos con stock bajo', 'info');
+    } else if (tipo === 'por-caducar') {
+        const terceraTarjeta = document.querySelector('.stat-card:nth-child(3)');
+        if (terceraTarjeta) {
+            terceraTarjeta.style.background = '#ffebee';
+            terceraTarjeta.classList.add('filtro-activo');
+        }
+        mostrarNotificacion('Mostrando productos próximos a caducar', 'info');
+    }
+    
+    mostrarProductos();
+}
+
+// Aplicar todos los filtros desde el panel
+function aplicarFiltrosDesdePanel() {
+    filtroActivo.categoria = document.getElementById('filtroCategoria').value;
+    filtroActivo.ubicacion = document.getElementById('filtroUbicacion').value;
+    mostrarProductos();
+    mostrarNotificacion('Filtros aplicados', 'success');
+}
+
+// Limpiar todos los filtros
+function limpiarFiltros() {
+    filtroActivo = {
+        tipo: 'todos',
+        categoria: 'todas',
+        ubicacion: 'todas'
+    };
+    if (document.getElementById('filtroCategoria')) {
+        document.getElementById('filtroCategoria').value = 'todas';
+    }
+    if (document.getElementById('filtroUbicacion')) {
+        document.getElementById('filtroUbicacion').value = 'todas';
+    }
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.style.background = '';
+        card.classList.remove('filtro-activo');
+    });
+    const primeraTarjeta = document.querySelector('.stat-card:first-child');
+    if (primeraTarjeta) {
+        primeraTarjeta.style.background = '#e8f0fe';
+        primeraTarjeta.classList.add('filtro-activo');
+    }
+    if (buscador) buscador.value = '';
+    mostrarProductos();
+    mostrarNotificacion('Filtros limpiados', 'info');
+}
+
 // Aplicar filtro por tipo (stock bajo / por caducar)
 function aplicarFiltroPorTipo(tipo) {
     filtroActivo.tipo = tipo;
