@@ -459,8 +459,6 @@ function limpiarFiltros() {
 
 // Contar notificaciones no leídas
 function contarNotificaciones() {
-    if (notificacionesLeidas) return 0;
-    
     let total = 0;
     if (notificaciones.stockBajo) total += notificaciones.stockBajo.length;
     if (notificaciones.porCaducar) total += notificaciones.porCaducar.length;
@@ -468,7 +466,7 @@ function contarNotificaciones() {
     
     const badge = document.getElementById('badgeNotificaciones');
     if (badge) {
-        if (total > 0 && !notificacionesLeidas) {
+        if (total > 0) {
             badge.textContent = total > 99 ? '99+' : total;
             badge.style.display = 'flex';
         } else {
@@ -476,6 +474,13 @@ function contarNotificaciones() {
         }
     }
     return total;
+}
+
+// Marcar notificaciones como leídas (oculta el badge hasta que haya nuevos cambios)
+function marcarNotificacionesLeidas() {
+    const badge = document.getElementById('badgeNotificaciones');
+    if (badge) badge.style.display = 'none';
+    // No reseteamos notificacionesLeidas para que no vuelva a aparecer
 }
 
 // Marcar notificaciones como leídas
@@ -488,6 +493,9 @@ function marcarNotificacionesLeidas() {
 function actualizarNotificaciones() {
     if (!productosActuales) return;
     
+    const stockBajoAnterior = notificaciones.stockBajo.length;
+    const porCaducarAnterior = notificaciones.porCaducar.length;
+    
     notificaciones.stockBajo = productosActuales.filter(p => p.cantidad > 0 && p.cantidad <= 2);
     
     const hoy = new Date();
@@ -499,6 +507,17 @@ function actualizarNotificaciones() {
     });
     
     notificaciones.porCaducar.sort((a, b) => new Date(a.fecha_caducidad) - new Date(b.fecha_caducidad));
+    
+    // Si hay nuevos cambios, reactivar el badge
+    if (notificaciones.stockBajo.length !== stockBajoAnterior || 
+        notificaciones.porCaducar.length !== porCaducarAnterior) {
+        const badge = document.getElementById('badgeNotificaciones');
+        if (badge && (notificaciones.stockBajo.length > 0 || notificaciones.porCaducar.length > 0)) {
+            const total = notificaciones.stockBajo.length + notificaciones.porCaducar.length;
+            badge.textContent = total > 99 ? '99+' : total;
+            badge.style.display = 'flex';
+        }
+    }
     
     contarNotificaciones();
     actualizarPanelNotificaciones();
@@ -617,7 +636,7 @@ async function consumirProductoRapido(codigo) {
         });
         
         // Registrar movimiento 
-        await apiRequest('movimientos/registrar', 'POST', {
+        await apiRequest('movimientos', 'POST', {
             despensa_id: despensaActual.id,
             tipo: 'consumir',
             producto_nombre: producto.nombre,
@@ -651,7 +670,7 @@ async function agregarProductoRapido(codigo) {
         });
         
         // Registrar movimiento 
-        await apiRequest('movimientos/registrar', 'POST', {
+        await apiRequest('movimientos', 'POST', {
             despensa_id: despensaActual.id,
             tipo: 'agregar',
             producto_nombre: producto.nombre,
