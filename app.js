@@ -548,6 +548,53 @@ function actualizarPanelNotificaciones() {
             }).join('');
         }
     }
+    // Cargar historial 
+    cargarHistorialMovimientos();
+}
+
+// Cargar historial de movimientos
+async function cargarHistorialMovimientos() {
+    if (!despensaActual) return;
+    
+    try {
+        const movimientos = await apiRequest(`movimientos?despensa_id=${despensaActual.id}`);
+        const listaHistorial = document.getElementById('listaHistorial');
+        
+        if (listaHistorial) {
+            if (movimientos.length === 0) {
+                listaHistorial.innerHTML = '<div class="notificacion-vacia">📭 Sin movimientos recientes</div>';
+            } else {
+                listaHistorial.innerHTML = movimientos.map(m => {
+                    let icono = '📝';
+                    if (m.tipo === 'consumir') icono = '➖';
+                    else if (m.tipo === 'agregar') icono = '➕';
+                    else if (m.tipo === 'eliminar') icono = '🗑️';
+                    else if (m.tipo === 'crear') icono = '✨';
+                    
+                    const fecha = new Date(m.fecha).toLocaleString();
+                    const cantidadTexto = m.cantidad ? ` ${m.cantidad} ` : ' ';
+                    
+                    return `
+                        <div class="notificacion-item">
+                            <span class="icono">${icono}</span>
+                            <span class="texto">
+                                <strong>${escapeHtml(m.usuario_nombre || m.usuario_email)}</strong> 
+                                ${m.tipo === 'consumir' ? 'consumió' : m.tipo === 'agregar' ? 'añadió' : m.tipo === 'eliminar' ? 'eliminó' : 'creó'}
+                                ${cantidadTexto}${escapeHtml(m.producto_nombre)}
+                            </span>
+                            <span class="fecha">${fecha}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando historial:', error);
+        const listaHistorial = document.getElementById('listaHistorial');
+        if (listaHistorial) {
+            listaHistorial.innerHTML = '<div class="notificacion-vacia">❌ Error al cargar historial</div>';
+        }
+    }
 }
 
 // ============================================
@@ -567,6 +614,14 @@ async function consumirProductoRapido(codigo) {
         await apiRequest('consumir', 'POST', {
             despensa_id: despensaActual.id,
             codigo_barras: codigo
+        });
+        
+        // Registrar movimiento 
+        await apiRequest('movimientos/registrar', 'POST', {
+            despensa_id: despensaActual.id,
+            tipo: 'consumir',
+            producto_nombre: producto.nombre,
+            cantidad: 1
         });
         
         producto.cantidad--;
@@ -593,6 +648,14 @@ async function agregarProductoRapido(codigo) {
             cantidad: producto.cantidad + 1,
             fecha_caducidad: producto.fecha_caducidad,
             ubicacion: producto.ubicacion
+        });
+        
+        // Registrar movimiento 
+        await apiRequest('movimientos/registrar', 'POST', {
+            despensa_id: despensaActual.id,
+            tipo: 'agregar',
+            producto_nombre: producto.nombre,
+            cantidad: 1
         });
         
         producto.cantidad++;
