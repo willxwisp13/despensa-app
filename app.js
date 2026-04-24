@@ -814,6 +814,15 @@ async function eliminarProducto() {
                 despensa_id: despensaActual.id,
                 codigo_barras: producto.codigo_barras
             });
+            
+            // Registrar movimiento 
+            await apiRequest('movimientos/registrar', 'POST', {
+                despensa_id: despensaActual.id,
+                tipo: 'eliminar',
+                producto_nombre: producto.nombre,
+                cantidad: 0
+            });
+            
             await cargarProductos();
             modalAcciones.style.display = 'none';
         } catch (error) {
