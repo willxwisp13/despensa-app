@@ -18,6 +18,8 @@ let notificaciones = {
     porCaducar: [],
     miembrosNuevos: []
 };
+let notificacionesLeidas = false;  
+let historialMovimientos = [];      
 
 // Elementos DOM
 const modalScanner = document.getElementById('modalScanner');
@@ -455,7 +457,10 @@ function limpiarFiltros() {
 // NOTIFICACIONES
 // ============================================
 
+// Contar notificaciones no leídas
 function contarNotificaciones() {
+    if (notificacionesLeidas) return 0;
+    
     let total = 0;
     if (notificaciones.stockBajo) total += notificaciones.stockBajo.length;
     if (notificaciones.porCaducar) total += notificaciones.porCaducar.length;
@@ -463,7 +468,7 @@ function contarNotificaciones() {
     
     const badge = document.getElementById('badgeNotificaciones');
     if (badge) {
-        if (total > 0) {
+        if (total > 0 && !notificacionesLeidas) {
             badge.textContent = total > 99 ? '99+' : total;
             badge.style.display = 'flex';
         } else {
@@ -471,6 +476,13 @@ function contarNotificaciones() {
         }
     }
     return total;
+}
+
+// Marcar notificaciones como leídas
+function marcarNotificacionesLeidas() {
+    notificacionesLeidas = true;
+    const badge = document.getElementById('badgeNotificaciones');
+    if (badge) badge.style.display = 'none';
 }
 
 function actualizarNotificaciones() {
@@ -496,6 +508,7 @@ function mostrarPanelNotificaciones() {
     const modal = document.getElementById('modalNotificaciones');
     if (modal) {
         actualizarPanelNotificaciones();
+        marcarNotificacionesLeidas();  // ← NUEVA LÍNEA
         modal.style.display = 'flex';
     }
 }
