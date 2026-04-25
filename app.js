@@ -504,64 +504,53 @@ function actualizarNotificaciones() {
         return dias > 0 && dias <= 7;
     });
     
-    // Obtener última vez que se vieron las notificaciones
-    const ultimaVista = localStorage.getItem('notificaciones_vistas');
-    let hayNotificacionesNuevas = false;
-    
-    // Si nunca se han visto, mostrar badge
-    if (!ultimaVista) {
-        hayNotificacionesNuevas = (stockBajoActual.length > 0 || porCaducarActual.length > 0);
-    } else {
-        // Comparar con estado anterior (guardado en localStorage)
-        const estadoAnterior = localStorage.getItem('notificaciones_estado');
-        if (estadoAnterior) {
-            const anterior = JSON.parse(estadoAnterior);
-            if (stockBajoActual.length !== anterior.stockBajo || 
-                porCaducarActual.length !== anterior.porCaducar) {
-                hayNotificacionesNuevas = true;
-            }
-        } else {
-            hayNotificacionesNuevas = (stockBajoActual.length > 0 || porCaducarActual.length > 0);
-        }
-    }
-    
-    // Guardar estado actual
-    localStorage.setItem('notificaciones_estado', JSON.stringify({
-        stockBajo: stockBajoActual.length,
-        porCaducar: porCaducarActual.length,
-        timestamp: Date.now()
-    }));
-    
     // Actualizar variables globales
     notificaciones.stockBajo = stockBajoActual;
     notificaciones.porCaducar = porCaducarActual;
     notificaciones.porCaducar.sort((a, b) => new Date(a.fecha_caducidad) - new Date(b.fecha_caducidad));
     
-    // Mostrar u ocultar badge según haya notificaciones nuevas
+    // Actualizar el badge (siempre muestra el total actual)
+    actualizarBadgeNotificaciones();
+    
+    // Actualizar el panel si está abierto
+    const modal = document.getElementById('modalNotificaciones');
+    if (modal && modal.style.display === 'flex') {
+        actualizarPanelNotificaciones();
+    }
+}
+
+function actualizarBadgeNotificaciones() {
     const badge = document.getElementById('badgeNotificaciones');
-    if (badge) {
-        const total = notificaciones.stockBajo.length + notificaciones.porCaducar.length;
-        if (total > 0 && hayNotificacionesNuevas) {
-            badge.textContent = total > 99 ? '99+' : total;
-            badge.style.display = 'flex';
-        } else {
-            badge.style.display = 'none';
-        }
+    if (!badge) return;
+    
+    // Verificar si el panel está abierto
+    const modal = document.getElementById('modalNotificaciones');
+    const panelAbierto = modal && modal.style.display === 'flex';
+    
+    // Si el panel está abierto, no mostrar badge
+    if (panelAbierto) {
+        badge.style.display = 'none';
+        return;
     }
     
-    actualizarPanelNotificaciones();
+    const total = notificaciones.stockBajo.length + notificaciones.porCaducar.length;
+    
+    if (total > 0) {
+        badge.textContent = total > 99 ? '99+' : total;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
 }
 
 function mostrarPanelNotificaciones() {
     const modal = document.getElementById('modalNotificaciones');
     if (modal) {
         actualizarPanelNotificaciones();
-        // Marcar como leídas y ocultar badge
+        modal.style.display = 'flex';
+        // Ocultar badge inmediatamente al abrir el panel
         const badge = document.getElementById('badgeNotificaciones');
         if (badge) badge.style.display = 'none';
-        // Guardar en localStorage que ya se vieron
-        localStorage.setItem('notificaciones_vistas', Date.now().toString());
-        modal.style.display = 'flex';
     }
 }
 
@@ -602,6 +591,15 @@ function actualizarPanelNotificaciones() {
     }
     // Cargar historial 
     cargarHistorialMovimientos();
+}
+
+function cerrarNotificaciones() {
+    const modal = document.getElementById('modalNotificaciones');
+    if (modal) {
+        modal.style.display = 'none';
+        // Al cerrar, actualizar badge por si hay nuevos cambios
+        actualizarBadgeNotificaciones();
+    }
 }
 
 // Cargar historial de movimientos
@@ -1174,9 +1172,7 @@ function escapeHtml(text) {
 document.addEventListener('DOMContentLoaded', async () => {
     // Botón de notificaciones
     document.getElementById('btnNotificaciones')?.addEventListener('click', mostrarPanelNotificaciones);
-    document.getElementById('closeNotificaciones')?.addEventListener('click', () => {
-        document.getElementById('modalNotificaciones').style.display = 'none';
-    });
+    document.getElementById('closeNotificaciones')?.addEventListener('click', cerrarNotificaciones);
     
     // Eventos de filtros por tipo
     document.querySelectorAll('.stat-card[data-filtro="todos"]')?.forEach(el => {
