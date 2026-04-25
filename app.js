@@ -20,6 +20,7 @@ let notificaciones = {
 };
 let notificacionesLeidas = false;  
 let historialMovimientos = [];      
+let ultimaVistaNotificaciones = null;
 
 // Elementos DOM
 const modalScanner = document.getElementById('modalScanner');
@@ -457,31 +458,7 @@ function limpiarFiltros() {
 // NOTIFICACIONES
 // ============================================
 
-function actualizarBadgeNotificaciones() {
-    const badge = document.getElementById('badgeNotificaciones');
-    if (!badge) return;
-    
-    // Verificar si el panel está abierto
-    const modal = document.getElementById('modalNotificaciones');
-    const panelAbierto = modal && modal.style.display === 'flex';
-    
-    // Si el panel está abierto, no mostrar badge
-    if (panelAbierto) {
-        badge.style.display = 'none';
-        return;
-    }
-    
-    const total = notificaciones.stockBajo.length + notificaciones.porCaducar.length;
-    
-    if (total > 0) {
-        badge.textContent = total > 99 ? '99+' : total;
-        badge.style.display = 'flex';
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
-function actualizarNotificaciones() {
+function actualizarNotificaciones(stockAnterior = 0, caducarAnterior = 0) {
     if (!productosActuales) return;
     
     // Calcular notificaciones actuales
@@ -494,25 +471,58 @@ function actualizarNotificaciones() {
         const dias = (fechaCad - hoy) / (1000 * 60 * 60 * 24);
         return dias > 0 && dias <= 7;
     });
-
-    // DEPURACIÓN: Ver qué hay en los productos y en los filtros
-    console.log('📊 Productos totales:', productosActuales.length);
-    console.log('⚠️ Stock bajo actual:', stockBajoActual.length);
-    console.log('⏰ Por caducar actual:', porCaducarActual.length);
-    console.log('📦 productosActuales:', productosActuales.map(p => ({ nombre: p.nombre, cantidad: p.cantidad, caducidad: p.fecha_caducidad })));
     
     // Actualizar variables globales
     notificaciones.stockBajo = stockBajoActual;
     notificaciones.porCaducar = porCaducarActual;
     notificaciones.porCaducar.sort((a, b) => new Date(a.fecha_caducidad) - new Date(b.fecha_caducidad));
     
-    // Actualizar el badge
-    actualizarBadgeNotificaciones();
+    // Actualizar badge
+    actualizarBadgeNotificaciones(stockAnterior, caducarAnterior);
     
-    // Actualizar el panel si está abierto
+    // Actualizar panel si está abierto
     const modal = document.getElementById('modalNotificaciones');
     if (modal && modal.style.display === 'flex') {
         actualizarPanelNotificaciones();
+    }
+}
+
+function actualizarBadgeNotificaciones(stockAnterior = null, caducarAnterior = null) {
+    const badge = document.getElementById('badgeNotificaciones');
+    if (!badge) return;
+    
+    // Si no se han visto nunca, mostrar el total
+    if (!ultimaVistaNotificaciones) {
+        const total = notificaciones.stockBajo.length + notificaciones.porCaducar.length;
+        if (total > 0) {
+            badge.textContent = total > 99 ? '99+' : total;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Verificar si hay novedades desde la última vista
+    let hayNovedades = false;
+    
+    if (stockAnterior !== null && caducarAnterior !== null) {
+        // Si hay nuevos elementos que antes no estaban
+        if (notificaciones.stockBajo.length > stockAnterior || 
+            notificaciones.porCaducar.length > caducarAnterior) {
+            hayNovedades = true;
+        }
+    } else {
+        // Comparación simple
+        hayNovedades = (notificaciones.stockBajo.length > 0 || notificaciones.porCaducar.length > 0);
+    }
+    
+    if (hayNovedades) {
+        const total = notificaciones.stockBajo.length + notificaciones.porCaducar.length;
+        badge.textContent = total > 99 ? '99+' : total;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
     }
 }
 
@@ -521,7 +531,11 @@ function mostrarPanelNotificaciones() {
     if (modal) {
         actualizarPanelNotificaciones();
         modal.style.display = 'flex';
-        // Esta línea oculta el badge al abrir el panel
+        
+        // Marcar como vistas (guardar timestamp)
+        ultimaVistaNotificaciones = Date.now();
+        
+        // Ocultar badge
         const badge = document.getElementById('badgeNotificaciones');
         if (badge) badge.style.display = 'none';
     }
@@ -531,8 +545,7 @@ function cerrarNotificaciones() {
     const modal = document.getElementById('modalNotificaciones');
     if (modal) {
         modal.style.display = 'none';
-        // Al cerrar, actualizar badge por si hay nuevos cambios
-        actualizarBadgeNotificaciones();
+        // No actualizar el badge aquí, solo se actualiza cuando hay cambios reales
     }
 }
 
@@ -771,7 +784,11 @@ function actualizarEstadisticas() {
     if (stockElement) stockElement.textContent = stockBajo;
     if (caducarElement) caducarElement.textContent = porCaducar;
 
-    actualizarNotificaciones();
+    // Guardar valores anteriores para comparar novedades
+    const stockAnterior = notificaciones.stockBajo.length;
+    const caducarAnterior = notificaciones.porCaducar.length;
+    
+    actualizarNotificaciones(stockAnterior, caducarAnterior);
 }
 
 // ============================================
