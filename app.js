@@ -493,33 +493,62 @@ function marcarNotificacionesLeidas() {
 function actualizarNotificaciones() {
     if (!productosActuales) return;
     
-    const stockBajoAnterior = notificaciones.stockBajo.length;
-    const porCaducarAnterior = notificaciones.porCaducar.length;
-    
-    notificaciones.stockBajo = productosActuales.filter(p => p.cantidad > 0 && p.cantidad <= 2);
+    // Calcular notificaciones actuales
+    const stockBajoActual = productosActuales.filter(p => p.cantidad > 0 && p.cantidad <= 2);
     
     const hoy = new Date();
-    notificaciones.porCaducar = productosActuales.filter(p => {
+    const porCaducarActual = productosActuales.filter(p => {
         if (!p.fecha_caducidad) return false;
         const fechaCad = new Date(p.fecha_caducidad);
         const dias = (fechaCad - hoy) / (1000 * 60 * 60 * 24);
         return dias > 0 && dias <= 7;
     });
     
-    notificaciones.porCaducar.sort((a, b) => new Date(a.fecha_caducidad) - new Date(b.fecha_caducidad));
+    // Obtener última vez que se vieron las notificaciones
+    const ultimaVista = localStorage.getItem('notificaciones_vistas');
+    let hayNotificacionesNuevas = false;
     
-    // Si hay nuevos cambios, reactivar el badge
-    if (notificaciones.stockBajo.length !== stockBajoAnterior || 
-        notificaciones.porCaducar.length !== porCaducarAnterior) {
-        const badge = document.getElementById('badgeNotificaciones');
-        if (badge && (notificaciones.stockBajo.length > 0 || notificaciones.porCaducar.length > 0)) {
-            const total = notificaciones.stockBajo.length + notificaciones.porCaducar.length;
-            badge.textContent = total > 99 ? '99+' : total;
-            badge.style.display = 'flex';
+    // Si nunca se han visto, mostrar badge
+    if (!ultimaVista) {
+        hayNotificacionesNuevas = (stockBajoActual.length > 0 || porCaducarActual.length > 0);
+    } else {
+        // Comparar con estado anterior (guardado en localStorage)
+        const estadoAnterior = localStorage.getItem('notificaciones_estado');
+        if (estadoAnterior) {
+            const anterior = JSON.parse(estadoAnterior);
+            if (stockBajoActual.length !== anterior.stockBajo || 
+                porCaducarActual.length !== anterior.porCaducar) {
+                hayNotificacionesNuevas = true;
+            }
+        } else {
+            hayNotificacionesNuevas = (stockBajoActual.length > 0 || porCaducarActual.length > 0);
         }
     }
     
-    contarNotificaciones();
+    // Guardar estado actual
+    localStorage.setItem('notificaciones_estado', JSON.stringify({
+        stockBajo: stockBajoActual.length,
+        porCaducar: porCaducarActual.length,
+        timestamp: Date.now()
+    }));
+    
+    // Actualizar variables globales
+    notificaciones.stockBajo = stockBajoActual;
+    notificaciones.porCaducar = porCaducarActual;
+    notificaciones.porCaducar.sort((a, b) => new Date(a.fecha_caducidad) - new Date(b.fecha_caducidad));
+    
+    // Mostrar u ocultar badge según haya notificaciones nuevas
+    const badge = document.getElementById('badgeNotificaciones');
+    if (badge) {
+        const total = notificaciones.stockBajo.length + notificaciones.porCaducar.length;
+        if (total > 0 && hayNotificacionesNuevas) {
+            badge.textContent = total > 99 ? '99+' : total;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+    
     actualizarPanelNotificaciones();
 }
 
@@ -527,7 +556,11 @@ function mostrarPanelNotificaciones() {
     const modal = document.getElementById('modalNotificaciones');
     if (modal) {
         actualizarPanelNotificaciones();
-        marcarNotificacionesLeidas();  // ← NUEVA LÍNEA
+        // Marcar como leídas y ocultar badge
+        const badge = document.getElementById('badgeNotificaciones');
+        if (badge) badge.style.display = 'none';
+        // Guardar en localStorage que ya se vieron
+        localStorage.setItem('notificaciones_vistas', Date.now().toString());
         modal.style.display = 'flex';
     }
 }
