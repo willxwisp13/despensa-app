@@ -521,7 +521,7 @@ function mostrarPanelNotificaciones() {
     if (modal) {
         actualizarPanelNotificaciones();
         modal.style.display = 'flex';
-        // Ocultar badge inmediatamente al abrir el panel
+        // Esta línea oculta el badge al abrir el panel
         const badge = document.getElementById('badgeNotificaciones');
         if (badge) badge.style.display = 'none';
     }
