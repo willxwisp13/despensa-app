@@ -494,6 +494,12 @@ function actualizarNotificaciones() {
         const dias = (fechaCad - hoy) / (1000 * 60 * 60 * 24);
         return dias > 0 && dias <= 7;
     });
+
+    // DEPURACIÓN: Ver qué hay en los productos y en los filtros
+    console.log('📊 Productos totales:', productosActuales.length);
+    console.log('⚠️ Stock bajo actual:', stockBajoActual.length);
+    console.log('⏰ Por caducar actual:', porCaducarActual.length);
+    console.log('📦 productosActuales:', productosActuales.map(p => ({ nombre: p.nombre, cantidad: p.cantidad, caducidad: p.fecha_caducidad })));
     
     // Actualizar variables globales
     notificaciones.stockBajo = stockBajoActual;
