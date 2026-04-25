@@ -457,68 +457,6 @@ function limpiarFiltros() {
 // NOTIFICACIONES
 // ============================================
 
-// Contar notificaciones no leídas
-function contarNotificaciones() {
-    let total = 0;
-    if (notificaciones.stockBajo) total += notificaciones.stockBajo.length;
-    if (notificaciones.porCaducar) total += notificaciones.porCaducar.length;
-    if (notificaciones.miembrosNuevos) total += notificaciones.miembrosNuevos.length;
-    
-    const badge = document.getElementById('badgeNotificaciones');
-    if (badge) {
-        if (total > 0) {
-            badge.textContent = total > 99 ? '99+' : total;
-            badge.style.display = 'flex';
-        } else {
-            badge.style.display = 'none';
-        }
-    }
-    return total;
-}
-
-// Marcar notificaciones como leídas (oculta el badge hasta que haya nuevos cambios)
-function marcarNotificacionesLeidas() {
-    const badge = document.getElementById('badgeNotificaciones');
-    if (badge) badge.style.display = 'none';
-    // No reseteamos notificacionesLeidas para que no vuelva a aparecer
-}
-
-// Marcar notificaciones como leídas
-function marcarNotificacionesLeidas() {
-    notificacionesLeidas = true;
-    const badge = document.getElementById('badgeNotificaciones');
-    if (badge) badge.style.display = 'none';
-}
-
-function actualizarNotificaciones() {
-    if (!productosActuales) return;
-    
-    // Calcular notificaciones actuales
-    const stockBajoActual = productosActuales.filter(p => p.cantidad > 0 && p.cantidad <= 2);
-    
-    const hoy = new Date();
-    const porCaducarActual = productosActuales.filter(p => {
-        if (!p.fecha_caducidad) return false;
-        const fechaCad = new Date(p.fecha_caducidad);
-        const dias = (fechaCad - hoy) / (1000 * 60 * 60 * 24);
-        return dias > 0 && dias <= 7;
-    });
-    
-    // Actualizar variables globales
-    notificaciones.stockBajo = stockBajoActual;
-    notificaciones.porCaducar = porCaducarActual;
-    notificaciones.porCaducar.sort((a, b) => new Date(a.fecha_caducidad) - new Date(b.fecha_caducidad));
-    
-    // Actualizar el badge (siempre muestra el total actual)
-    actualizarBadgeNotificaciones();
-    
-    // Actualizar el panel si está abierto
-    const modal = document.getElementById('modalNotificaciones');
-    if (modal && modal.style.display === 'flex') {
-        actualizarPanelNotificaciones();
-    }
-}
-
 function actualizarBadgeNotificaciones() {
     const badge = document.getElementById('badgeNotificaciones');
     if (!badge) return;
@@ -543,6 +481,35 @@ function actualizarBadgeNotificaciones() {
     }
 }
 
+function actualizarNotificaciones() {
+    if (!productosActuales) return;
+    
+    // Calcular notificaciones actuales
+    const stockBajoActual = productosActuales.filter(p => p.cantidad > 0 && p.cantidad <= 2);
+    
+    const hoy = new Date();
+    const porCaducarActual = productosActuales.filter(p => {
+        if (!p.fecha_caducidad) return false;
+        const fechaCad = new Date(p.fecha_caducidad);
+        const dias = (fechaCad - hoy) / (1000 * 60 * 60 * 24);
+        return dias > 0 && dias <= 7;
+    });
+    
+    // Actualizar variables globales
+    notificaciones.stockBajo = stockBajoActual;
+    notificaciones.porCaducar = porCaducarActual;
+    notificaciones.porCaducar.sort((a, b) => new Date(a.fecha_caducidad) - new Date(b.fecha_caducidad));
+    
+    // Actualizar el badge
+    actualizarBadgeNotificaciones();
+    
+    // Actualizar el panel si está abierto
+    const modal = document.getElementById('modalNotificaciones');
+    if (modal && modal.style.display === 'flex') {
+        actualizarPanelNotificaciones();
+    }
+}
+
 function mostrarPanelNotificaciones() {
     const modal = document.getElementById('modalNotificaciones');
     if (modal) {
@@ -551,6 +518,15 @@ function mostrarPanelNotificaciones() {
         // Ocultar badge inmediatamente al abrir el panel
         const badge = document.getElementById('badgeNotificaciones');
         if (badge) badge.style.display = 'none';
+    }
+}
+
+function cerrarNotificaciones() {
+    const modal = document.getElementById('modalNotificaciones');
+    if (modal) {
+        modal.style.display = 'none';
+        // Al cerrar, actualizar badge por si hay nuevos cambios
+        actualizarBadgeNotificaciones();
     }
 }
 
@@ -591,15 +567,6 @@ function actualizarPanelNotificaciones() {
     }
     // Cargar historial 
     cargarHistorialMovimientos();
-}
-
-function cerrarNotificaciones() {
-    const modal = document.getElementById('modalNotificaciones');
-    if (modal) {
-        modal.style.display = 'none';
-        // Al cerrar, actualizar badge por si hay nuevos cambios
-        actualizarBadgeNotificaciones();
-    }
 }
 
 // Cargar historial de movimientos
